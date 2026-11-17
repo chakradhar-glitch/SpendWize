@@ -1,0 +1,19 @@
+name: spendwise-local
+services:
+  postgres:
+    image: postgres:17.7
+    environment:
+      POSTGRES_USER: spendwise_owner
+      POSTGRES_DB: spendwise
+      POSTGRES_PASSWORD: ${SPENDWISE_LOCAL_POSTGRES_PASSWORD:?Set a local owner password}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spendwise_owner -d spendwise"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+volumes:
+  postgres_data:
