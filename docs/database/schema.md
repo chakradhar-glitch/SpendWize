@@ -1,15 +1,17 @@
 # Database table dictionary
 
-Updated 2026-11-17. Implementation baseline; no live migrations applied.
+Updated 2026-11-17. Implementation baseline; revision 0001 verified on disposable
+local PostgreSQL. No hosted migrations applied.
 
 Design dictionary corresponding to [schema.json](schema.json). The historical
 `node scripts/render-schema.mjs` renderer is absent from this checkout.
 
 Implement writes using the [MVP specification](../planning/backend-mvp-spec.md)
 and [API contract](../api/mvp-contract.md). The previously referenced
-`implementation.md` and `backend/migrations/0001_initial.sql` do not exist;
-[ticket 02](../../.scratch/backend-mvp-implementation/issues/02-persistence-and-access-boundary.md)
-owns the executable migration baseline. See the
+`implementation.md` and `backend/migrations/0001_initial.sql` do not exist. The
+actual versioned baseline is [revision 0001](../../backend/migrations/versions/0001_initial.py)
+with [application DDL](../../backend/migrations/versions/0001_initial.sql).
+See the
 [artifact inventory](../testing/01-foundation-evidence.md).
 
 ## auth.users
@@ -313,15 +315,16 @@ Indexes:
 
 ## idempotency_requests
 
-Remembers one successful financial-create submission so a network retry returns the original result.
+Remembers one successful financial create, replacement or deletion so a retry
+returns the original result. The agreed API contract supersedes create-only wording.
 
 | Column | PostgreSQL type | Required | Default | Keys | Reference | Meaning |
 | --- | --- | --- | --- | --- | --- | --- |
 | actor_id | uuid | yes | Current profile | PK FK | profiles.id | The authenticated caller scopes each request key. |
 | request_key | uuid | yes | Client generated once | PK |  | PRIMARY KEY (actor_id, request_key); reuse on retry. |
 | group_id | uuid | yes | Target group | FK | groups.id | Recheck current authorization before replay. |
-| operation | text | yes | — |  |  | CHECK in create_expense, create_repayment. |
-| request_hash | bytea | yes | Canonical request digest |  |  | Includes operation, group, and normalized financial data. |
+| operation | text | yes | — |  |  | CHECK in create_expense, replace_expense, delete_expense, create_repayment, replace_repayment, delete_repayment. |
+| request_hash | bytea | yes | Canonical request digest |  |  | Includes operation, group, target, canonical financial data and expected version where applicable. |
 | response_status | smallint | yes | Successful response status |  |  | Recorded only with successful committed creation. |
 | response_body | jsonb | yes | Creation response |  |  | Original response; no auth credentials. |
 | created_at | timestamptz | yes | now() |  |  |  |

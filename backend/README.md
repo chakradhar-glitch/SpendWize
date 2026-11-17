@@ -16,10 +16,27 @@ uv run --locked uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-access-lo
 OpenAPI is at `/openapi.json`; interactive documentation is at `/docs`.
 Use HTTPS at the deployed proxy. Bind locally during development.
 
-The local container creates the migration owner, not the runtime role. Ticket 02
-adds explicit migrations, restricted-role provisioning and their verification.
-Until then, do not use owner credentials in the running API or assume database
-readiness from health. No business routes or migration commands are available yet.
+The local development container creates the migration owner, not the runtime role.
+Provision `spendwise_runtime` separately as LOGIN/NOSUPERUSER/NOCREATEDB/NOCREATEROLE/
+NOBYPASSRLS with no membership in the owner role. Provision `anon` and `authenticated`
+if using plain PostgreSQL (Supabase already owns them). The migration owner needs
+CREATE on the database and USAGE/REFERENCES on the existing `auth.users(id)`.
+Only the disposable test fixture creates a minimal local auth table; do not run
+that fixture or create managed auth internals on Supabase.
+
+Apply migrations explicitly with the migration URL in the environment:
+
+```powershell
+# Set SPENDWISE_MIGRATION_DATABASE_URL securely; Alembic does not load .env.
+uv run --locked alembic upgrade head
+```
+
+The version table and application tables live in the private `app` schema.
+Runtime receives only DML needed by the API and SELECT/INSERT on immutable history
+and retry results. Client roles receive no schema/table/function grants. The
+migration owner must own the application schema; runtime must never own it.
+Do not give the migration-owner URL to the API or infer database readiness from health.
+No business routes are available yet.
 Hosted URLs use the provider's actual host/port, SSL requirements and restricted
 runtime credentials; never run this local container initialization against Supabase.
 Adjust pool size to the host's connection budget.
@@ -55,9 +72,31 @@ uv run --locked mypy app
 uv run --locked ruff check app
 ```
 
-Ticket 02 supplies the migrated database harness; later tickets add behavior cases
-at that seam. Ticket 01 uses a startup/HTTP demonstration, not another test suite.
-Never replace the real database with SQLite or skip unavailable database checks.
+Start the designated disposable PostgreSQL database first (Docker Desktop required):
+
+```powershell
+./scripts/start-test-database.ps1
+uv run --locked pytest
+```
+
+The script generates ignored `.env.test` credentials once and starts a PostgreSQL
+17.7 container pinned by digest at loopback port 55432. Each suite run rebuilds
+only the `app` schema in local `spendwise_test`, migrates from empty as the
+non-superuser owner, and connects the API/journeys as the restricted runtime role.
+Privileged fixture connections alone seed local auth identities, inspect/inject
+faults and clean tables between scenarios. Tests refuse remote hosts or a different
+database name and fail rather than skip if configuration/PostgreSQL is unavailable.
+Do not run concurrent suite processes against this one disposable database.
+
+To reset the entire designated test container, use
+`docker compose --env-file .env.test -f compose.test.yaml down`, then run the startup
+script again. No named data volume is configured for tests; removing that container
+discards its data. Keep `.env.test` to reuse its credentials. This does not reset
+development Compose or hosted data. Downgrade is intentionally unsupported; rebuild
+designated disposable resources or deploy compatible code instead.
+
+Later tickets add behavior cases at the same API/PostgreSQL seam. Ticket 01 uses
+a startup/HTTP demonstration, not another test suite. Never substitute SQLite.
 
 See [foundation evidence](../docs/testing/01-foundation-evidence.md) for actual
 verification and the inventory of absent historical artifacts.

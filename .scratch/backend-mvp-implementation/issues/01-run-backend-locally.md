@@ -26,4 +26,3 @@ Own the runnable foundation demonstration and shared runner/configuration setup.
 ## Completion evidence
 
 See [foundation verification](../../../docs/testing/01-foundation-evidence.md) and [startup instructions](../../../backend/README.md). Local HTTP startup, secret-free failures/logs, Ruff and mypy passed. Real PostgreSQL harness verification follows in 02.
-

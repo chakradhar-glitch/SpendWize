@@ -1,0 +1,15 @@
+name: spendwise-tests
+services:
+  postgres:
+    image: postgres:17.7@sha256:2006493727bd5277eece187319af1ef82b4cf82cf4fc1ed00da0775b646ac2a4
+    environment:
+      POSTGRES_USER: spendwise_fixture
+      POSTGRES_DB: spendwise_test
+      POSTGRES_PASSWORD: ${SPENDWISE_TEST_POSTGRES_PASSWORD:?Set the fixture password}
+    ports:
+      - "127.0.0.1:55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spendwise_fixture -d spendwise_test"]
+      interval: 2s
+      timeout: 2s
+      retries: 30

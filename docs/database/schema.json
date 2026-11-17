@@ -1,0 +1,1195 @@
+{
+  "schema": "app",
+  "updated": "2026-11-17",
+  "status": "Implementation baseline; no live migrations applied",
+  "tables": [
+    {
+      "id": "auth.users",
+      "managed": true,
+      "position": [
+        36,
+        40
+      ],
+      "purpose": "Supabase-owned authentication identity. Only the referenced primary key is shown; this is not a complete definition of the managed table.",
+      "status": "Supabase managed",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": true,
+          "default": "Supabase managed",
+          "keys": "PK",
+          "description": "Stable authenticated user ID.",
+          "ref": null
+        }
+      ],
+      "rules": [
+        "Read authentication state through supported Supabase APIs; do not manage passwords or refresh records in application tables.",
+        "One auth user can have multiple provider identities and device sessions."
+      ],
+      "indexes": [
+        "Managed by Supabase."
+      ]
+    },
+    {
+      "id": "profiles",
+      "position": [
+        284,
+        40
+      ],
+      "purpose": "The SpendWise display identity shared across sessions, group memberships, and financial attribution.",
+      "status": "Shape agreed · constraints proposed",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": true,
+          "default": "Verified token subject",
+          "keys": "PK FK",
+          "description": "One profile per auth user.",
+          "ref": [
+            "auth.users",
+            "id"
+          ]
+        },
+        {
+          "name": "display_name",
+          "type": "text",
+          "required": true,
+          "default": "Seed once; fallback Member",
+          "keys": "",
+          "description": "Proposed trimmed length: 1–100 characters. Later Google sign-ins never overwrite edits.",
+          "ref": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": true,
+          "default": "now()",
+          "keys": "",
+          "description": "Creation instant.",
+          "ref": null
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "required": true,
+          "default": "now(); update on change",
+          "keys": "",
+          "description": "Last profile change.",
+          "ref": null
+        }
+      ],
+      "rules": [
+        "FastAPI provisions missing profiles idempotently before group use.",
+        "No password, email verification, or access/refresh token columns. Email remains authoritative in Supabase Auth.",
+        "Proposed FK deletion policy: RESTRICT to preserve attribution. No direct client grants."
+      ],
+      "indexes": [
+        "PRIMARY KEY (id)."
+      ]
+    },
+    {
+      "id": "groups",
+      "position": [
+        536,
+        40
+      ],
+      "purpose": "One shared-expense group with one currency, one date-validation timezone, and a permanent currency lock after financial activity.",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": true,
+          "default": "gen_random_uuid()",
+          "keys": "PK",
+          "description": "",
+          "ref": null
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "default": "—",
+          "keys": "",
+          "description": "Proposed trimmed length: 1–100 characters.",
+          "ref": null
+        },
+        {
+          "name": "currency_code",
+          "type": "text",
+          "required": true,
+          "default": "—",
+          "keys": "",
+          "description": "CHECK in INR, USD, CAD, GBP, EUR.",
+          "ref": null
+        },
+        {
+          "name": "timezone",
+          "type": "text",
+          "required": true,
+          "default": "Creator suggestion",
+          "keys": "",
+          "description": "Validate against supported IANA timezone names; immutable after creation.",
+          "ref": null
+        },
+        {
+          "name": "currency_locked_at",
+          "type": "timestamptz",
+          "required": false,
+          "default": "NULL",
+          "keys": "",
+          "description": "Set on first financial entry, never cleared after deletion.",
+          "ref": null
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "required": true,
+          "default": "true",
+          "keys": "",
+          "description": "Set false when final active member leaves.",
+          "ref": null
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "required": true,
+          "default": "Current profile",
+          "keys": "FK",
+          "description": "Creation attribution.",
+          "ref": [
+            "profiles",
+            "id"
+          ]
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": true,
+          "default": "now()",
+          "keys": "",
+          "description": "",
+          "ref": null
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "required": true,
+          "default": "now(); update on change",
+          "keys": "",
+          "description": "",
+          "ref": null
+        }
+      ],
+      "rules": [
+        "Currency cannot change once currency_locked_at is non-null. Group timezone is fixed.",
+        "Proposed: serialize financial and membership changes by locking the group row. Recheck actor access after acquiring the lock.",
+        "Final departure requires all balances zero, inactivates the group and revokes invitations in one transaction.",
+        "Group renaming is proposed; permanent group deletion is outside the MVP."
+      ],
+      "indexes": [
+        "PRIMARY KEY (id).",
+        "No extra group-name index required for joined-group lists."
+      ]
+    },
+    {
+      "id": "group_memberships",
+      "position": [
+        284,
+        207
+      ],
+      "purpose": "Persistent identity of a profile in a group. The same membership row is reactivated after a valid invitation is accepted.",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": true,
+          "default": "gen_random_uuid()",
+          "keys": "PK",
+          "description": "",
+          "ref": null
+        },
+        {
+          "name": "group_id",
+          "type": "uuid",
+          "required": true,
+          "default": "—",
+          "keys": "FK UQ",
+          "description": "Group scope.",
+          "ref": [
+            "groups",
+            "id"
+          ]
+        },
+        {
+          "name": "profile_id",
+          "type": "uuid",
+          "required": true,
+          "default": "Current profile",
+          "keys": "FK UQ",
+          "description": "The participating person.",
+          "ref": [
+            "profiles",
+            "id"
+          ]
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "required": true,
+          "default": "true",
+          "keys": "",
+          "description": "Current access flag; removal is not row deletion.",
+          "ref": null
+        },
+        {
+          "name": "first_joined_at",
+          "type": "timestamptz",
+          "required": true,
+          "default": "now()",
+          "keys": "",
+          "description": "Never reset on rejoin.",
+          "ref": null
+        },
+        {
+          "name": "last_joined_at",
+          "type": "timestamptz",
+          "required": true,
+          "default": "now()",
+          "keys": "",
+          "description": "Updated on rejoin.",
+          "ref": null
+        },
+        {
+          "name": "departed_at",
+          "type": "timestamptz",
+          "required": false,
+          "default": "NULL",
+          "keys": "",
+          "description": "Non-null while inactive; departure details remain in membership_events.",
+          "ref": null
+        }
+      ],
+      "rules": [
+        "UNIQUE (group_id, profile_id) prevents duplicate memberships.",
+        "UNIQUE (group_id, id) supports same-group composite foreign keys from financial tables.",
+        "CHECK active implies departed_at is NULL; inactive implies it is non-null.",
+        "Leaving or removal requires every direct balance involving this member to be zero.",
+        "Never physically delete memberships; departure removes group access."
+      ],
+      "indexes": [
+        "UNIQUE (group_id, profile_id).",
+        "UNIQUE (group_id, id).",
+        "Partial index (profile_id, group_id) WHERE is_active for joined-group lists."
+      ]
+    },
+    {
+      "id": "group_invitations",
+      "position": [
+        536,
+        207
+      ],
+      "purpose": "Reusable bearer invitation with expiry, creator attribution, hashed secret, and revocation state.",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": true,
+          "default": "gen_random_uuid()",
+          "keys": "PK",
+          "description": "",
+          "ref": null
+        },
+        {
+          "name": "group_id",
+          "type": "uuid",
+          "required": true,
+          "default": "—",
+          "keys": "FK",
+          "description": "Invitation target.",
+          "ref": [
+            "groups",
+            "id"
+          ]
+        },
+        {
+          "name": "token_hash",
+          "type": "bytea",
+          "required": true,
+          "default": "SHA-256 of random token",
+          "keys": "UQ",
+          "description": "Store only the digest of a cryptographically random high-entropy token.",
+          "ref": null
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "required": true,
+          "default": "Current profile",
+          "keys": "FK",
+          "description": "Revoke this creator’s links on departure.",
+          "ref": [
+            "profiles",
+            "id"
+          ]
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": true,
+          "default": "now()",
+          "keys": "",
+          "description": "",
+          "ref": null
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamptz",
+          "required": true,
+          "default": "created_at + 7 days",
+          "keys": "",
+          "description": "",
+          "ref": null
+        },
+        {
+          "name": "revoked_at",
+          "type": "timestamptz",
+          "required": false,
+          "default": "NULL",
+          "keys": "",
+          "description": "",
+          "ref": null
+        },
+        {
+          "name": "revoked_by",
+          "type": "uuid",
+          "required": false,
+          "default": "NULL",
+          "keys": "FK",
+          "description": "Explicit or automatic revocation actor.",
+          "ref": [
+            "profiles",
+            "id"
+          ]
+        }
+      ],
+      "rules": [
+        "CHECK expires_at > created_at; creation service fixes duration at seven days.",
+        "Reject expiry, revocation, inactive group, or unverified acceptance. Revalidate under the group lock.",
+        "Multiple links can coexist. Repeated acceptance while active returns existing membership.",
+        "Full token is returned once; a replacement link can be created if it is no longer available."
+      ],
+      "indexes": [
+        "UNIQUE (group_id, id) for same-group membership-event references.",
+        "UNIQUE (token_hash) for token lookup.",
+        "Partial index (group_id, created_by) WHERE revoked_at IS NULL for revocation."
+      ]
+    },
+    {
+      "id": "membership_events",
+      "position": [
+        36,
+        207
+      ],
+      "purpose": "Append-only join, leave, and removal history, including rejoining and the invitation accepted.",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": true,
+          "default": "gen_random_uuid()",
+          "keys": "PK",
+          "description": "",
+          "ref": null
+        },
+        {
+          "name": "group_id",
+          "type": "uuid",
+          "required": true,
+          "default": "—",
+          "keys": "FK",
+          "description": "Enforces group scope.",
+          "ref": [
+            "groups",
+            "id"
+          ]
+        },
+        {
+          "name": "membership_id",
+          "type": "uuid",
+          "required": true,
+          "default": "—",
+          "keys": "FK",
+          "description": "Composite FK (group_id, membership_id).",
+          "ref": [
+            "group_memberships",
+            "id"
+          ]
+        },
+        {
+          "name": "event_type",
+          "type": "text",
+          "required": true,
+          "default": "—",
+          "keys": "",
+          "description": "CHECK in joined, left, removed. A later joined event records rejoining.",
+          "ref": null
+        },
+        {
+          "name": "actor_id",
+          "type": "uuid",
+          "required": true,
+          "default": "Current profile",
+          "keys": "FK",
+          "description": "The joining/leaving user or remover.",
+          "ref": [
+            "profiles",
+            "id"
+          ]
+        },
+        {
+          "name": "invitation_id",
+          "type": "uuid",
+          "required": false,
+          "default": "NULL",
+          "keys": "FK",
+          "description": "Null for creator’s initial join; otherwise the accepted invite on joining.",
+          "ref": [
+            "group_invitations",
+            "id"
+          ]
+        },
+        {
+          "name": "occurred_at",
+          "type": "timestamptz",
+          "required": true,
+          "default": "now()",
+          "keys": "",
+          "description": "",
+          "ref": null
+        }
+      ],
+      "rules": [
+        "Append-only; never edit or delete past events.",
+        "Membership state and event are written in the same transaction.",
+        "When invitation_id is present, validate that it belongs to the same group; proposed composite FK requires UNIQUE (group_id, id) on invitations."
+      ],
+      "indexes": [
+        "Index (membership_id, occurred_at, id).",
+        "UNIQUE (group_id, id) on invitations for same-group references."
+      ]
+    },
+    {
+      "id": "expenses",
+      "position": [
+        284,
+        377
+      ],
+      "purpose": "One shared expense, one payer, editable transaction date, split method, and versioned soft deletion.",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": true,
+          "default": "gen_random_uuid()",
+          "keys": "PK",
+          "description": "",
+          "ref": null
+        },
+        {
+          "name": "group_id",
+          "type": "uuid",
+          "required": true,
+          "default": "—",
+          "keys": "FK",
+          "description": "Group and currency scope.",
+          "ref": [
+            "groups",
+            "id"
+          ]
+        },
+        {
+          "name": "payer_membership_id",
+          "type": "uuid",
+          "required": true,
+          "default": "—",
+          "keys": "FK",
+          "description": "Composite FK (group_id, payer_membership_id); payer need not be a participant.",
+          "ref": [
+            "group_memberships",
+            "id"
+          ]
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "default": "—",
+          "keys": "",
+          "description": "Proposed trimmed length: 1–200 characters; icons derived from name.",
+          "ref": null
+        },
+        {
+          "name": "amount_minor",
+          "type": "bigint",
+          "required": true,
+          "default": "—",
+          "keys": "",
+          "description": "Positive whole minor units; no floating point. CHECK <= 99999999999.",
+          "ref": null
+        },
+        {
+          "name": "transaction_date",
+          "type": "date",
+          "required": true,
+          "default": "—",
+          "keys": "",
+          "description": "Editable; no future date in group timezone.",
+          "ref": null
+        },
+        {
+          "name": "split_method",
+          "type": "text",
+          "required": true,
+          "default": "—",
+          "keys": "",
+          "description": "CHECK in equal, exact, percentage.",
+          "ref": null
+        },
+        {
+          "name": "version",
+          "type": "integer",
+          "required": true,
+          "default": "1",
+          "keys": "",
+          "description": "CHECK > 0; increment for every correction or deletion.",
+          "ref": null
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "required": true,
+          "default": "Current profile",
+          "keys": "FK",
+          "description": "Creation actor.",
+          "ref": [
+            "profiles",
+            "id"
+          ]
+        },
+        {
+          "name": "updated_by",
+          "type": "uuid",
+          "required": true,
+          "default": "Current profile",
+          "keys": "FK",
+          "description": "Latest correction actor.",
+          "ref": [
+            "profiles",
+            "id"
+          ]
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": true,
+          "default": "now()",
+          "keys": "",
+          "description": "",
+          "ref": null
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "required": true,
+          "default": "now(); update on change",
+          "keys": "",
+          "description": "",
+          "ref": null
+        },
+        {
+          "name": "deleted_at",
+          "type": "timestamptz",
+          "required": false,
+          "default": "NULL",
+          "keys": "",
+          "description": "Soft-deleted entries are excluded from balances and normal lists.",
+          "ref": null
+        }
+      ],
+      "rules": [
+        "UNIQUE (group_id, id) enables same-group child references.",
+        "Validate active payer/participants for new entries. Departed-member edit policy is still under review.",
+        "Sum of current shares must equal amount_minor. Percentages must sum to 10000 basis points for percentage splits.",
+        "Proposed: deferred database constraint triggers validate cross-row share totals and split inputs at commit.",
+        "Entry, shares, history, version increment, and permanent currency lock change atomically.",
+        "CHECK date against today is service validation, not a time-dependent table CHECK."
+      ],
+      "indexes": [
+        "UNIQUE (group_id, id).",
+        "Partial (group_id, transaction_date DESC, created_at DESC, id DESC) WHERE deleted_at IS NULL.",
+        "Index (group_id, payer_membership_id)."
+      ]
+    },
+    {
+      "id": "expense_shares",
+      "position": [
+        536,
+        377
+      ],
+      "purpose": "Final allocated amount for each participant, plus original percentage input where applicable.",
+      "columns": [
+        {
+          "name": "expense_id",
+          "type": "uuid",
+          "required": true,
+          "default": "—",
+          "keys": "PK FK",
+          "description": "Composite FK (group_id, expense_id).",
+          "ref": [
+            "expenses",
+            "id"
+          ]
+        },
+        {
+          "name": "membership_id",
+          "type": "uuid",
+          "required": true,
+          "default": "—",
+          "keys": "PK FK",
+          "description": "Composite FK (group_id, membership_id); one share per participant.",
+          "ref": [
+            "group_memberships",
+            "id"
+          ]
+        },
+        {
+          "name": "group_id",
+          "type": "uuid",
+          "required": true,
+          "default": "Parent expense group",
+          "keys": "FK",
+          "description": "Explicit same-group integrity.",
+          "ref": [
+            "groups",
+            "id"
+          ]
+        },
+        {
+          "name": "amount_minor",
+          "type": "bigint",
+          "required": true,
+          "default": "—",
+          "keys": "",
+          "description": "CHECK >= 0. Exact input is this amount; equal input is implicit. CHECK <= 99999999999.",
+          "ref": null
+        },
+        {
+          "name": "percentage_basis_points",
+          "type": "integer",
+          "required": false,
+          "default": "NULL",
+          "keys": "",
+          "description": "0–10000 for percentage splits, otherwise NULL. 3333 means 33.33%.",
+          "ref": null
+        }
+      ],
+      "rules": [
+        "PRIMARY KEY (expense_id, membership_id).",
+        "Payer’s own share is spending participation but creates no self-debt.",
+        "Use integer/rational split calculation; largest fractional remainder wins leftover units, stable membership ID breaks ties.",
+        "No independent share deletion or soft-delete flag: shares belong to an expense revision. Old versions live in immutable expense history.",
+        "Cross-row and parent split-method consistency checked by proposed deferred constraint triggers."
+      ],
+      "indexes": [
+        "PRIMARY KEY (expense_id, membership_id).",
+        "Index (group_id, membership_id, expense_id) for balance queries."
+      ]
+    },
+    {
+      "id": "repayments",
+      "position": [
+        36,
+        377
+      ],
+      "purpose": "A recorded external payment between two group members. It reduces direct debt and never counts as spending.",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": true,
+          "default": "gen_random_uuid()",
+          "keys": "PK",
+          "description": "",
+          "ref": null
+        },
+        {
+          "name": "group_id",
+          "type": "uuid",
+          "required": true,
+          "default": "—",
+          "keys": "FK",
+          "description": "Repayment group.",
+          "ref": [
+            "groups",
+            "id"
+          ]
+        },
+        {
+          "name": "sender_membership_id",
+          "type": "uuid",
+          "required": true,
+          "default": "—",
+          "keys": "FK",
+          "description": "Composite FK (group_id, sender_membership_id).",
+          "ref": [
+            "group_memberships",
+            "id"
+          ]
+        },
+        {
+          "name": "recipient_membership_id",
+          "type": "uuid",
+          "required": true,
+          "default": "—",
+          "keys": "FK",
+          "description": "Composite FK (group_id, recipient_membership_id).",
+          "ref": [
+            "group_memberships",
+            "id"
+          ]
+        },
+        {
+          "name": "amount_minor",
+          "type": "bigint",
+          "required": true,
+          "default": "—",
+          "keys": "",
+          "description": "CHECK > 0. New repayment cannot exceed current direct debt. CHECK <= 99999999999.",
+          "ref": null
+        },
+        {
+          "name": "transaction_date",
+          "type": "date",
+          "required": true,
+          "default": "—",
+          "keys": "",
+          "description": "Editable and backdatable; no future date in group timezone.",
+          "ref": null
+        },
+        {
+          "name": "payment_method",
+          "type": "text",
+          "required": true,
+          "default": "cash",
+          "keys": "",
+          "description": "One method per repayment: cash or other. User requested payment_methods; singular column stores the selected value.",
+          "ref": null
+        },
+        {
+          "name": "payment_method_label",
+          "type": "text",
+          "required": false,
+          "default": "NULL",
+          "keys": "",
+          "description": "NULL for cash; required trimmed 1–100 characters for other, e.g. GPay, PhonePe, CRED.",
+          "ref": null
+        },
+        {
+          "name": "version",
+          "type": "integer",
+          "required": true,
+          "default": "1",
+          "keys": "",
+          "description": "CHECK > 0; optimistic concurrency token.",
+          "ref": null
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "required": true,
+          "default": "Current profile",
+          "keys": "FK",
+          "description": "Any active member may record it.",
+          "ref": [
+            "profiles",
+            "id"
+          ]
+        },
+        {
+          "name": "updated_by",
+          "type": "uuid",
+          "required": true,
+          "default": "Current profile",
+          "keys": "FK",
+          "description": "Latest correction actor.",
+          "ref": [
+            "profiles",
+            "id"
+          ]
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": true,
+          "default": "now()",
+          "keys": "",
+          "description": "",
+          "ref": null
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "required": true,
+          "default": "now(); update on change",
+          "keys": "",
+          "description": "",
+          "ref": null
+        },
+        {
+          "name": "deleted_at",
+          "type": "timestamptz",
+          "required": false,
+          "default": "NULL",
+          "keys": "",
+          "description": "",
+          "ref": null
+        }
+      ],
+      "rules": [
+        "CHECK sender_membership_id <> recipient_membership_id.",
+        "UNIQUE (group_id, id) for same-group history references.",
+        "For creation: both parties active; sender currently owes recipient; amount <= that debt. Check under group lock.",
+        "Do not retroactively invalidate a historical repayment when an expense correction reverses balances.",
+        "Repayment edit validation and party changes remain explicit open questions.",
+        "CHECK payment_method in cash, other. Cash requires NULL label; other requires trimmed nonblank label up to 100 characters.",
+        "Payment method and label are included in repayment revisions and canonical retry fingerprints."
+      ],
+      "indexes": [
+        "UNIQUE (group_id, id).",
+        "Partial (group_id, transaction_date DESC, created_at DESC, id DESC) WHERE deleted_at IS NULL.",
+        "Indexes (group_id, sender_membership_id) and (group_id, recipient_membership_id)."
+      ]
+    },
+    {
+      "id": "expense_revisions",
+      "position": [
+        536,
+        547
+      ],
+      "purpose": "Immutable full before/after snapshots of expense creation, correction, and soft deletion, including all shares.",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": true,
+          "default": "gen_random_uuid()",
+          "keys": "PK",
+          "description": "",
+          "ref": null
+        },
+        {
+          "name": "group_id",
+          "type": "uuid",
+          "required": true,
+          "default": "—",
+          "keys": "FK",
+          "description": "Group scope.",
+          "ref": [
+            "groups",
+            "id"
+          ]
+        },
+        {
+          "name": "expense_id",
+          "type": "uuid",
+          "required": true,
+          "default": "—",
+          "keys": "FK UQ",
+          "description": "Composite FK (group_id, expense_id).",
+          "ref": [
+            "expenses",
+            "id"
+          ]
+        },
+        {
+          "name": "version",
+          "type": "integer",
+          "required": true,
+          "default": "Entry version",
+          "keys": "UQ",
+          "description": "UNIQUE (expense_id, version).",
+          "ref": null
+        },
+        {
+          "name": "action",
+          "type": "text",
+          "required": true,
+          "default": "—",
+          "keys": "",
+          "description": "CHECK in created, updated, deleted.",
+          "ref": null
+        },
+        {
+          "name": "actor_id",
+          "type": "uuid",
+          "required": true,
+          "default": "Current profile",
+          "keys": "FK",
+          "description": "Immutable correction attribution.",
+          "ref": [
+            "profiles",
+            "id"
+          ]
+        },
+        {
+          "name": "occurred_at",
+          "type": "timestamptz",
+          "required": true,
+          "default": "now()",
+          "keys": "",
+          "description": "",
+          "ref": null
+        },
+        {
+          "name": "before_values",
+          "type": "jsonb",
+          "required": false,
+          "default": "NULL on creation",
+          "keys": "",
+          "description": "Full prior entry and ordered shares; required for update/delete.",
+          "ref": null
+        },
+        {
+          "name": "after_values",
+          "type": "jsonb",
+          "required": true,
+          "default": "—",
+          "keys": "",
+          "description": "Full resulting entry and ordered shares, including deletion state.",
+          "ref": null
+        }
+      ],
+      "rules": [
+        "Append-only. Proposed role grants allow INSERT/SELECT but no UPDATE/DELETE, backed by mutation-rejecting triggers.",
+        "Creation has NULL before_values; update/delete has a complete object. Snapshots contain integer money and IDs.",
+        "Snapshot creation is atomic with expense/share mutation. Never store tokens or credentials.",
+        "Snapshots preserve values at revision time; current profile names may still change separately."
+      ],
+      "indexes": [
+        "UNIQUE (expense_id, version).",
+        "Index (group_id, occurred_at, id)."
+      ]
+    },
+    {
+      "id": "repayment_revisions",
+      "position": [
+        36,
+        547
+      ],
+      "purpose": "Immutable before/after snapshots of repayment creation, correction, and soft deletion.",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": true,
+          "default": "gen_random_uuid()",
+          "keys": "PK",
+          "description": "",
+          "ref": null
+        },
+        {
+          "name": "group_id",
+          "type": "uuid",
+          "required": true,
+          "default": "—",
+          "keys": "FK",
+          "description": "Group scope.",
+          "ref": [
+            "groups",
+            "id"
+          ]
+        },
+        {
+          "name": "repayment_id",
+          "type": "uuid",
+          "required": true,
+          "default": "—",
+          "keys": "FK UQ",
+          "description": "Composite FK (group_id, repayment_id).",
+          "ref": [
+            "repayments",
+            "id"
+          ]
+        },
+        {
+          "name": "version",
+          "type": "integer",
+          "required": true,
+          "default": "Entry version",
+          "keys": "UQ",
+          "description": "UNIQUE (repayment_id, version).",
+          "ref": null
+        },
+        {
+          "name": "action",
+          "type": "text",
+          "required": true,
+          "default": "—",
+          "keys": "",
+          "description": "CHECK in created, updated, deleted.",
+          "ref": null
+        },
+        {
+          "name": "actor_id",
+          "type": "uuid",
+          "required": true,
+          "default": "Current profile",
+          "keys": "FK",
+          "description": "Immutable attribution.",
+          "ref": [
+            "profiles",
+            "id"
+          ]
+        },
+        {
+          "name": "occurred_at",
+          "type": "timestamptz",
+          "required": true,
+          "default": "now()",
+          "keys": "",
+          "description": "",
+          "ref": null
+        },
+        {
+          "name": "before_values",
+          "type": "jsonb",
+          "required": false,
+          "default": "NULL on creation",
+          "keys": "",
+          "description": "Full prior repayment; required for update/delete.",
+          "ref": null
+        },
+        {
+          "name": "after_values",
+          "type": "jsonb",
+          "required": true,
+          "default": "—",
+          "keys": "",
+          "description": "Full resulting repayment, including deletion state.",
+          "ref": null
+        }
+      ],
+      "rules": [
+        "Same append-only and atomic write policies as expense_revisions.",
+        "Dedicated history tables keep real foreign keys to their parent records.",
+        "Changing a transaction date is a normal audited correction, not a new repayment."
+      ],
+      "indexes": [
+        "UNIQUE (repayment_id, version).",
+        "Index (group_id, occurred_at, id)."
+      ]
+    },
+    {
+      "id": "idempotency_requests",
+      "position": [
+        284,
+        677
+      ],
+      "purpose": "Remembers one successful financial create, replacement or deletion so a retry returns the original result.",
+      "columns": [
+        {
+          "name": "actor_id",
+          "type": "uuid",
+          "required": true,
+          "default": "Current profile",
+          "keys": "PK FK",
+          "description": "The authenticated caller scopes each request key.",
+          "ref": [
+            "profiles",
+            "id"
+          ]
+        },
+        {
+          "name": "request_key",
+          "type": "uuid",
+          "required": true,
+          "default": "Client generated once",
+          "keys": "PK",
+          "description": "PRIMARY KEY (actor_id, request_key); reuse on retry.",
+          "ref": null
+        },
+        {
+          "name": "group_id",
+          "type": "uuid",
+          "required": true,
+          "default": "Target group",
+          "keys": "FK",
+          "description": "Recheck current authorization before replay.",
+          "ref": [
+            "groups",
+            "id"
+          ]
+        },
+        {
+          "name": "operation",
+          "type": "text",
+          "required": true,
+          "default": "—",
+          "keys": "",
+          "description": "CHECK in create_expense, replace_expense, delete_expense, create_repayment, replace_repayment, delete_repayment.",
+          "ref": null
+        },
+        {
+          "name": "request_hash",
+          "type": "bytea",
+          "required": true,
+          "default": "Canonical request digest",
+          "keys": "",
+          "description": "Includes operation, group, target, canonical financial data and expected version where applicable.",
+          "ref": null
+        },
+        {
+          "name": "response_status",
+          "type": "smallint",
+          "required": true,
+          "default": "Successful response status",
+          "keys": "",
+          "description": "Recorded only with successful committed creation.",
+          "ref": null
+        },
+        {
+          "name": "response_body",
+          "type": "jsonb",
+          "required": true,
+          "default": "Creation response",
+          "keys": "",
+          "description": "Original response; no auth credentials.",
+          "ref": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "required": true,
+          "default": "now()",
+          "keys": "",
+          "description": "",
+          "ref": null
+        }
+      ],
+      "rules": [
+        "Confirmed: same key + same operation/data returns original result; changed operation/data conflicts. Different key is a new command, never payload deduplication.",
+        "Proposed: reserve key, lock group, validate, create entry/history, and record response in one transaction; failed attempts roll back.",
+        "Concurrent duplicate submissions wait on uniqueness and replay the committed result.",
+        "Proposed retention: retain successful keys for MVP lifetime; do not purge and silently turn late retries into new payments.",
+        "Replay still requires current group access and verified authentication. A replay response describes the original operation, not the latest edited entry."
+      ],
+      "indexes": [
+        "PRIMARY KEY (actor_id, request_key).",
+        "Index (group_id) for administration; no cleanup TTL proposed."
+      ],
+      "status": "Retained for MVP · implementation authorized"
+    }
+  ]
+}

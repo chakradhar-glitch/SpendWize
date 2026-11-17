@@ -43,13 +43,13 @@ class RequestContextMiddleware:
         except Exception:
             if response_started:
                 raise
-            response = error_response(
-                request, 500, "internal_error", "Request failed."
-            )
+            response = error_response(request, 500, "internal_error", "Request failed.")
             await response(scope, receive, send_with_id)
         finally:
             # Deliberate allowlist: no URL, query, headers, body or exception text.
             logger.info(
                 "request_id=%s status=%s duration_ms=%.2f",
-                request_id, status, (perf_counter() - started) * 1000,
+                request_id,
+                status,
+                (perf_counter() - started) * 1000,
             )

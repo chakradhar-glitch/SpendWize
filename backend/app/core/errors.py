@@ -9,8 +9,12 @@ from starlette.exceptions import HTTPException
 
 class ApplicationError(Exception):
     def __init__(
-        self, status: int, code: str, message: str,
-        *, fields: list[dict[str, str]] | None = None,
+        self,
+        status: int,
+        code: str,
+        message: str,
+        *,
+        fields: list[dict[str, str]] | None = None,
         details: dict[str, Any] | None = None,
     ) -> None:
         self.status = status
@@ -21,15 +25,22 @@ class ApplicationError(Exception):
 
 
 def error_response(
-    request: Request, status: int, code: str, message: str,
+    request: Request,
+    status: int,
+    code: str,
+    message: str,
     fields: list[dict[str, str]] | None = None,
     details: dict[str, Any] | None = None,
 ) -> JSONResponse:
     return JSONResponse(
         status_code=status,
         content={
-            "error": {"code": code, "message": message,
-                      "fields": fields or [], "details": details or {}},
+            "error": {
+                "code": code,
+                "message": message,
+                "fields": fields or [],
+                "details": details or {},
+            },
             "request_id": request.state.request_id,
         },
     )
@@ -44,8 +55,11 @@ def application_error(request: Request, exc: ApplicationError) -> JSONResponse:
 def validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
     # Never return Pydantic's input or ctx: either may contain tokens/passwords.
     fields = [
-        {"path": ".".join(str(part) for part in error["loc"]),
-         "message": "Invalid value", "type": error["type"]}
+        {
+            "path": ".".join(str(part) for part in error["loc"]),
+            "message": "Invalid value",
+            "type": error["type"],
+        }
         for error in exc.errors()
     ]
     return error_response(
@@ -68,8 +82,13 @@ def database_error(request: Request, exc: DBAPIError) -> JSONResponse:
         (isinstance(exc, OperationalError) and not sqlstate)
         or exc.connection_invalidated
         or sqlstate.startswith("08")
-        or sqlstate in {
-        "55P03", "40P01", "40001", "53300", "57P01",
+        or sqlstate
+        in {
+            "55P03",
+            "40P01",
+            "40001",
+            "53300",
+            "57P01",
         }
     ):
         return error_response(
