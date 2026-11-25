@@ -1,0 +1,1319 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>SpendWise — Interactive database design</title>
+<style>
+:root{--bg:#f6f7f9;--surface:#fff;--ink:#202b38;--muted:#637184;--line:#dce3e9;--accent:#076c5b;--soft:#e6f4ef;--amber:#8c5810;--amber-bg:#fff4de;--blue:#315c9a;--blue-bg:#eef3fb;--shadow:0 6px 24px #172a3910;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);font-size:14px;line-height:1.55;color-scheme:light}
+*{box-sizing:border-box}body{margin:0}button,input,textarea{font:inherit}button,a,input,textarea{outline-offset:4px}button{cursor:pointer}a{color:var(--accent)}button:disabled{cursor:default;opacity:.6}.shell{display:grid;grid-template-columns:238px minmax(0,1fr);min-height:100vh}.rail{background:var(--surface);border-right:1px solid var(--line);padding:26px 16px;position:sticky;top:0;height:100vh;overflow:auto}.brand{font-size:21px;letter-spacing:-.7px;font-weight:700;padding:0 10px 24px;display:flex;gap:9px;align-items:center}.brand-mark{background:var(--accent);color:#fff;border-radius:10px;width:30px;height:30px;display:grid;place-items:center;font-size:19px}.eyebrow{color:var(--muted);font-size:11px;font-weight:650;letter-spacing:1.6px;text-transform:uppercase}.rail .eyebrow{padding:12px 10px}.search{width:100%;padding:10px 12px;background:var(--bg);border:1px solid var(--line);border-radius:8px;margin:0 0 14px}.table-list{display:grid;gap:3px}.table-item{border:0;background:transparent;color:var(--muted);text-align:left;padding:9px 10px;border-radius:7px;display:flex;align-items:center;gap:9px;width:100%;font-size:12px;overflow-wrap:anywhere}.table-item:hover{background:var(--bg)}.table-item.active{background:var(--soft);color:var(--accent);font-weight:650}.dot{width:7px;height:7px;flex:none;border-radius:50%;background:var(--accent)}.dot.managed{background:var(--blue)}.rail-footer{margin:24px 10px 0;border-top:1px solid var(--line);padding-top:20px;font-size:12px;color:var(--muted)}.rail-footer a{display:block;margin-top:7px}.main{min-width:0}.topbar{display:flex;justify-content:space-between;gap:12px;padding:19px 34px;border-bottom:1px solid var(--line);background:var(--surface);align-items:center}.topbar small{color:var(--muted)}.btn{background:var(--surface);color:var(--ink);border:1px solid var(--line);padding:8px 13px;border-radius:7px;white-space:nowrap}.btn:hover{background:var(--bg)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}.actions{display:flex;gap:8px}.content{max-width:1580px;padding:32px 34px 60px;margin:auto}.hero{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:22px}h1{font-size:32px;font-weight:600;letter-spacing:-1.1px;line-height:1.2;margin:9px 0 10px}h2{font-size:20px;font-weight:600;letter-spacing:-.4px;margin:0 0 10px}h3{font-size:15px;margin:0 0 8px;font-weight:600}p{margin:0 0 12px}.lead{color:var(--muted);max-width:760px}.badge{font-size:11px;font-weight:600;padding:4px 8px;border-radius:5px;display:inline-block;background:var(--amber-bg);color:var(--amber);white-space:nowrap}.badge.agreed{background:var(--soft);color:var(--accent)}.badge.managed{background:var(--blue-bg);color:var(--blue)}.summary-strip{display:flex;gap:23px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin:18px 0 23px}.summary-strip strong{color:var(--ink);font-weight:600}.tabs{display:flex;gap:24px;border-bottom:1px solid var(--line);margin-bottom:24px;overflow-x:auto}.tab{border:0;background:transparent;color:var(--muted);padding:12px 0;border-bottom:2px solid transparent;white-space:nowrap}.tab[aria-selected=true]{color:var(--accent);border-color:var(--accent);font-weight:600}.panel[hidden]{display:none}.map-layout{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:18px;align-items:start}.map-card,.inspector,.card{background:var(--surface);border:1px solid var(--line);border-radius:11px;overflow:hidden}.card{padding:22px}.card+.card{margin-top:16px}.map-header{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:15px}.subtle{font-size:12px;color:var(--muted)}.legend{display:flex;gap:13px;align-items:center;font-size:11px;color:var(--muted)}.legend span{display:flex;gap:5px;align-items:center}.map-scroll{overflow:auto;background-image:radial-gradient(var(--line) .7px,transparent .7px);background-size:18px 18px}.map-canvas{position:relative;width:860px;height:790px;margin:auto}.edges{position:absolute;inset:0;width:860px;height:790px;pointer-events:none}.edge{stroke:var(--line);stroke-width:1.3;fill:none}.edge.focus{stroke:var(--accent);stroke-width:2}.node{position:absolute;width:186px;height:104px;text-align:left;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);padding:12px;box-shadow:var(--shadow);transition:opacity .15s,border-color .15s}.node:hover{border-color:var(--accent)}.node.selected{border:2px solid var(--accent);padding:11px;background:var(--soft)}.node.dim{opacity:.48}.node-name{font-size:12px;font-weight:650;display:block;overflow-wrap:anywhere}.node-kind{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px}.node-fields{font:11px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--muted);display:block;margin-top:5px}.map-foot{padding:12px 20px;color:var(--muted);font-size:12px;border-top:1px solid var(--line)}.inspector{position:sticky;top:20px}.inspect-head{padding:20px;border-bottom:1px solid var(--line)}.inspect-head h2{font:600 17px ui-monospace,SFMono-Regular,Consolas,monospace;margin:9px 0;overflow-wrap:anywhere}.inspect-body{padding:18px 20px;max-height:750px;overflow:auto}.field{padding:12px 0;border-bottom:1px solid var(--line)}.field:first-child{padding-top:0}.field:last-child{border:0}.field-top{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.field-name{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;font-weight:600}.field-type{font-size:11px;color:var(--muted)}.key{font-size:9px;padding:1px 4px;border:1px solid var(--line);border-radius:3px}.field p{font-size:12px;color:var(--muted);margin:5px 0 0}.link-btn{background:none;border:0;color:var(--accent);padding:0;text-align:left;font-size:12px;text-decoration:underline}.rule-list{padding-left:18px;margin:8px 0 18px;color:var(--muted);font-size:12px}.rule-list li{margin:6px 0}.note{width:100%;resize:vertical;min-height:85px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:9px;font-size:12px}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:12px;text-align:left}th{font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--bg)}td,th{padding:12px 13px;border-bottom:1px solid var(--line);vertical-align:top}td code{white-space:nowrap}code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.92em}.details-head{display:flex;justify-content:space-between;gap:15px;margin-bottom:20px}.callout{background:var(--amber-bg);color:var(--amber);padding:12px 15px;border-radius:7px;font-size:12px;margin-bottom:18px}.flow-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.flow-grid .card{margin:0}.steps{counter-reset:steps;list-style:none;padding:0;margin:16px 0 0}.steps li{position:relative;padding:0 0 19px 35px;font-size:13px}.steps li::before{counter-increment:steps;content:counter(steps);position:absolute;left:0;top:0;background:var(--soft);color:var(--accent);border-radius:50%;width:23px;height:23px;display:grid;place-items:center;font-size:11px}.steps li:not(:last-child)::after{content:"";position:absolute;left:11px;top:25px;bottom:4px;border-left:1px solid var(--line)}.steps strong{display:block;font-weight:600}.steps small{display:block;color:var(--muted);margin-top:3px}.decisions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.decision{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:19px}.decision h3{display:flex;align-items:center;gap:9px}.decision p{font-size:13px;color:var(--muted);margin:0}.scenario{margin-top:20px}.controls{display:flex;gap:16px;flex-wrap:wrap;margin-top:20px}.controls label{display:grid;gap:6px;font-size:12px;color:var(--muted)}.controls input[type=number]{width:155px;background:var(--bg);color:var(--ink);border:1px solid var(--line);padding:9px;border-radius:6px}.controls label.checkbox{display:flex;align-items:center;align-self:end;min-height:40px}.scenario-result{font-size:23px;letter-spacing:-.5px;margin:22px 0 8px;font-weight:600}.scenario-output{background:var(--soft);padding:18px;border-radius:8px;margin-top:20px}.scenario-output.invalid{background:var(--amber-bg)}.equation{font-size:12px;color:var(--muted)}.question{border-left:3px solid var(--amber);padding:18px 20px;background:var(--surface);border-radius:0 8px 8px 0;margin-bottom:14px}.question p{font-size:13px;color:var(--muted)}.question .recommend{color:var(--ink)}.question label{display:block;font-size:12px;margin-bottom:6px}.question textarea{min-height:65px}.footer{margin-top:25px;display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--muted)}.empty{padding:10px;color:var(--muted);font-size:12px}.pill-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}.toast{position:fixed;bottom:22px;right:24px;background:var(--ink);color:var(--surface);padding:11px 16px;border-radius:8px;box-shadow:var(--shadow);z-index:5}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:17px}.text-link{font-size:12px}.mobile-table-label{display:none}.sr-only{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(prefers-color-scheme:dark){:root{--bg:#111a22;--surface:#19242e;--ink:#e2e9ee;--muted:#a2b0bf;--line:#34424f;--accent:#78d8ba;--soft:#203b36;--amber:#f0c779;--amber-bg:#3b3020;--blue:#a2c5fb;--blue-bg:#24334a;--shadow:0 6px 24px #0002;color-scheme:dark}.brand-mark,.btn.primary{color:#10251e}.node.dim{opacity:.55}}
+@media(min-width:1650px){.map-layout{grid-template-columns:minmax(860px,1fr) 390px}}
+@media(max-width:1180px){.map-layout{grid-template-columns:minmax(0,1fr)}.inspector{position:static}.inspect-body{max-height:none}.flow-grid{grid-template-columns:1fr}.content{padding:25px}.topbar{padding:17px 25px}}
+@media(max-width:720px){.shell{grid-template-columns:1fr}.rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:15px}.brand{padding:0 0 12px;font-size:19px}.rail .eyebrow,.rail-footer{display:none}.search{margin:0 0 8px}.table-list{display:flex;overflow:auto;gap:4px}.table-item{width:auto;white-space:nowrap;padding:7px 9px;flex:none}.main{width:100%}.content{padding:22px 15px}.topbar{padding:12px 15px;flex-wrap:wrap}.hero{display:block}h1{font-size:28px}.hero>.badge{margin-top:8px}.tabs{gap:20px}.decisions{grid-template-columns:1fr}.summary-strip{gap:12px}.actions .btn{padding:6px 10px;font-size:12px}.map-header{align-items:flex-start;flex-direction:column}.details-head{flex-direction:column}.card{padding:17px}}
+@media print{.rail,.topbar,.tabs,.actions,.map-card,.note,.question label,.question textarea,.toolbar,.footer,.toast{display:none!important}.shell{display:block}.content{padding:0;max-width:none}.panel[hidden]{display:block!important}.panel{margin:20px 0;break-inside:auto}.map-layout{display:block}.inspector{position:static}.inspect-body{max-height:none;overflow:visible}.card,.decision,.question{break-inside:avoid}.decisions,.flow-grid{display:block}.decision{margin-bottom:12px}.hero{margin-bottom:12px}body{background:white;color:black}.badge{border:1px solid #aaa}.inspector{border:0}.print-intro{display:block!important}.scenario{display:none}.table-wrap{overflow:visible}table{font-size:10px}.print-table{display:block!important;break-before:page}.print-table h2{font-size:16px}.print-table td,.print-table th{padding:5px}.print-table table{table-layout:fixed;overflow-wrap:anywhere}a{color:inherit}}
+.print-intro,.print-table{display:none}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="rail" aria-label="Table navigation">
+ <div class="brand"><span class="brand-mark" aria-hidden="true">↗</span> SpendWise</div>
+ <label class="sr-only" for="search">Search tables or columns</label><input class="search" id="search" type="search" placeholder="Search tables or columns…">
+ <div class="eyebrow">Schema explorer</div><div id="table-list" class="table-list"></div>
+ <div class="rail-footer">MVP · Group expenses<br>PostgreSQL + Supabase Auth<a href="../README.md">Documentation index ↗</a><a href="design.md">Interview record ↗</a><a href="../GLOSSARY.md">Domain glossary ↗</a></div>
+</aside>
+<main class="main">
+ <header class="topbar"><div><span class="eyebrow">Engineering / Database design</span><br><small>Implementation baseline · 17 November 2026</small></div><div class="actions"><button class="btn" id="export">Export review notes</button><button class="btn" id="print">Print / Save PDF</button></div></header>
+ <div class="content">
+  <div class="hero"><div><div class="eyebrow">SpendWise · MVP architecture</div><h1>The shape of every shared expense.</h1><p class="lead">Explore the tables, follow the money, and review the decisions behind the group-expense model.</p></div><span class="badge">Implementation started · development only</span></div>
+  <div class="summary-strip"><span><strong id="app-count"></strong> application tables proposed</span><span><strong>5 currencies</strong> · INR / USD / CAD / GBP / EUR</span><span><strong>Integer money</strong> · direct pairwise balances</span></div>
+  <nav class="tabs" role="tablist" aria-label="Document views"><button class="tab" id="tab-map" role="tab" aria-controls="panel-map" aria-selected="true" data-view="map">Relationships</button><button class="tab" id="tab-tables" role="tab" aria-controls="panel-tables" aria-selected="false" data-view="tables" tabindex="-1">Tables & columns</button><button class="tab" id="tab-flows" role="tab" aria-controls="panel-flows" aria-selected="false" data-view="flows" tabindex="-1">Flows & scenarios</button><button class="tab" id="tab-decisions" role="tab" aria-controls="panel-decisions" aria-selected="false" data-view="decisions" tabindex="-1">Agreed decisions</button><button class="tab" id="tab-questions" role="tab" aria-controls="panel-questions" aria-selected="false" data-view="questions" tabindex="-1">Remaining review</button></nav>
+  <section class="panel" id="panel-map" role="tabpanel" aria-labelledby="tab-map"><div class="map-layout"><div class="map-card"><div class="map-header"><div><h3>Relationship map</h3><span class="subtle">Select a table to highlight its references and inspect its columns.</span></div><div class="legend"><span><i class="dot"></i>SpendWise</span><span><i class="dot managed"></i>Supabase</span></div></div><div class="map-scroll"><div class="map-canvas" id="map-canvas"><svg class="edges" id="edges" viewBox="0 0 860 790" aria-hidden="true"></svg><div id="nodes"></div></div></div><div class="map-foot">Lines connect foreign-key references. A table can have several references to the same parent. Select a node for exact keys and cardinality.</div></div><aside class="inspector" id="inspector" aria-label="Selected table details"></aside></div></section>
+  <section class="panel" id="panel-tables" role="tabpanel" aria-labelledby="tab-tables" hidden><div class="toolbar"><div><h2>Table dictionary</h2><p class="subtle">Choose a table in the sidebar. PK = primary key · FK = foreign key · UQ = unique.</p></div><button class="btn" data-switch="map">View relationships</button></div><div id="table-detail"></div></section>
+  <section class="panel" id="panel-flows" role="tabpanel" aria-labelledby="tab-flows" hidden><div class="callout">Product rules are agreed. Locking, constraint placement, and transaction implementation below are technical proposals for review.</div><div class="flow-grid" id="flows"></div><div class="card scenario"><span class="badge agreed">Agreed behavior</span><h2 style="margin-top:12px">Try a correction after repayment</h2><p class="subtle">Alice originally owed Bob. Both the corrected expense and the recorded repayment contribute to the remaining balance. Amounts below are whole rupees.</p><div class="controls"><label>Original debt (₹)<input id="original" type="number" min="1" step="1" value="500"></label><label>Already repaid (₹)<input id="paid" type="number" min="0" step="1" value="500"></label><label>Corrected debt (₹)<input id="corrected" type="number" min="0" step="1" value="400"></label><label class="checkbox"><input id="departed" type="checkbox"> Alice has departed</label></div><div class="scenario-output" id="scenario-output" role="status" aria-live="polite"><div id="scenario-result" class="scenario-result"></div><div class="equation" id="scenario-explanation"></div></div></div></section>
+  <section class="panel" id="panel-decisions" role="tabpanel" aria-labelledby="tab-decisions" hidden><div class="toolbar"><div><h2>What we have agreed</h2><p class="subtle">These are product and modeling decisions confirmed in the design interview.</p></div><span class="badge agreed">Confirmed</span></div><div id="decisions" class="decisions"></div></section>
+  <section class="panel" id="panel-questions" role="tabpanel" aria-labelledby="tab-questions" hidden><h2>A short path to a finished schema</h2><p class="lead">Two sections remain: final behavior edge cases, then a concrete schema review. The recommendations below are proposals, not accepted decisions.</p><div class="callout">Notes are saved only in this browser when local storage is available. Writing a note does not approve a decision or update the source documents. Export notes or share your answers in chat.</div><h3>1 · Final behavior decisions</h3><div id="questions"></div><div class="card"><h3>2 · Concrete schema review</h3><p>Review the proposed columns in Tables & columns, then confirm the design as a whole. The main technical proposals are:</p><ul class="rule-list" id="review-list"></ul><p class="subtle">The final artifact will contain types, required fields, defaults, keys, constraints, indexes, balance rules, atomic writes, and an agreed relationship map. An initial migration exists and has been tested locally; no live migrations have been executed.</p></div></section>
+  <div id="print-tables"></div>
+  <footer class="footer"><span>Local, self-contained document · no network requests</span><a href="../mvp_user_journeys.md">MVP journeys</a><a href="design.md">Design record</a><span id="storage-status" role="status">Review notes stay in your browser.</span></footer>
+ </div>
+</main>
+</div><div id="toast" class="toast" role="status" hidden></div>
+<script>
+'use strict';
+// The schema dictionary is generated from schema.json. See implementation.md for current status.
+// BEGIN GENERATED TABLE DICTIONARY — edit schema.json instead.
+const tables=[
+  {
+    "id": "auth.users",
+    "managed": true,
+    "position": [
+      36,
+      40
+    ],
+    "purpose": "Supabase-owned authentication identity. Only the referenced primary key is shown; this is not a complete definition of the managed table.",
+    "status": "Supabase managed",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default": "Supabase managed",
+        "keys": "PK",
+        "description": "Stable authenticated user ID.",
+        "ref": null
+      }
+    ],
+    "rules": [
+      "Read authentication state through supported Supabase APIs; do not manage passwords or refresh records in application tables.",
+      "One auth user can have multiple provider identities and device sessions."
+    ],
+    "indexes": [
+      "Managed by Supabase."
+    ]
+  },
+  {
+    "id": "profiles",
+    "position": [
+      284,
+      40
+    ],
+    "purpose": "The SpendWise display identity shared across sessions, group memberships, and financial attribution.",
+    "status": "Shape agreed · constraints proposed",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default": "Verified token subject",
+        "keys": "PK FK",
+        "description": "One profile per auth user.",
+        "ref": [
+          "auth.users",
+          "id"
+        ]
+      },
+      {
+        "name": "display_name",
+        "type": "text",
+        "required": true,
+        "default": "Seed once; fallback Member",
+        "keys": "",
+        "description": "Proposed trimmed length: 1–100 characters. Later Google sign-ins never overwrite edits.",
+        "ref": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamptz",
+        "required": true,
+        "default": "now()",
+        "keys": "",
+        "description": "Creation instant.",
+        "ref": null
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamptz",
+        "required": true,
+        "default": "now(); update on change",
+        "keys": "",
+        "description": "Last profile change.",
+        "ref": null
+      }
+    ],
+    "rules": [
+      "FastAPI provisions missing profiles idempotently before group use.",
+      "No password, email verification, or access/refresh token columns. Email remains authoritative in Supabase Auth.",
+      "Proposed FK deletion policy: RESTRICT to preserve attribution. No direct client grants."
+    ],
+    "indexes": [
+      "PRIMARY KEY (id)."
+    ]
+  },
+  {
+    "id": "groups",
+    "position": [
+      536,
+      40
+    ],
+    "purpose": "One shared-expense group with one currency, one date-validation timezone, and a permanent currency lock after financial activity.",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default": "gen_random_uuid()",
+        "keys": "PK",
+        "description": "",
+        "ref": null
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": "—",
+        "keys": "",
+        "description": "Proposed trimmed length: 1–100 characters.",
+        "ref": null
+      },
+      {
+        "name": "currency_code",
+        "type": "text",
+        "required": true,
+        "default": "—",
+        "keys": "",
+        "description": "CHECK in INR, USD, CAD, GBP, EUR.",
+        "ref": null
+      },
+      {
+        "name": "timezone",
+        "type": "text",
+        "required": true,
+        "default": "Creator suggestion",
+        "keys": "",
+        "description": "Validate against supported IANA timezone names; immutable after creation.",
+        "ref": null
+      },
+      {
+        "name": "currency_locked_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": "NULL",
+        "keys": "",
+        "description": "Set on first financial entry, never cleared after deletion.",
+        "ref": null
+      },
+      {
+        "name": "is_active",
+        "type": "boolean",
+        "required": true,
+        "default": "true",
+        "keys": "",
+        "description": "Set false when final active member leaves.",
+        "ref": null
+      },
+      {
+        "name": "created_by",
+        "type": "uuid",
+        "required": true,
+        "default": "Current profile",
+        "keys": "FK",
+        "description": "Creation attribution.",
+        "ref": [
+          "profiles",
+          "id"
+        ]
+      },
+      {
+        "name": "created_at",
+        "type": "timestamptz",
+        "required": true,
+        "default": "now()",
+        "keys": "",
+        "description": "",
+        "ref": null
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamptz",
+        "required": true,
+        "default": "now(); update on change",
+        "keys": "",
+        "description": "",
+        "ref": null
+      }
+    ],
+    "rules": [
+      "Currency cannot change once currency_locked_at is non-null. Group timezone is fixed.",
+      "Proposed: serialize financial and membership changes by locking the group row. Recheck actor access after acquiring the lock.",
+      "Final departure requires all balances zero, inactivates the group and revokes invitations in one transaction.",
+      "Group renaming is proposed; permanent group deletion is outside the MVP."
+    ],
+    "indexes": [
+      "PRIMARY KEY (id).",
+      "No extra group-name index required for joined-group lists."
+    ]
+  },
+  {
+    "id": "group_memberships",
+    "position": [
+      284,
+      207
+    ],
+    "purpose": "Persistent identity of a profile in a group. The same membership row is reactivated after a valid invitation is accepted.",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default": "gen_random_uuid()",
+        "keys": "PK",
+        "description": "",
+        "ref": null
+      },
+      {
+        "name": "group_id",
+        "type": "uuid",
+        "required": true,
+        "default": "—",
+        "keys": "FK UQ",
+        "description": "Group scope.",
+        "ref": [
+          "groups",
+          "id"
+        ]
+      },
+      {
+        "name": "profile_id",
+        "type": "uuid",
+        "required": true,
+        "default": "Current profile",
+        "keys": "FK UQ",
+        "description": "The participating person.",
+        "ref": [
+          "profiles",
+          "id"
+        ]
+      },
+      {
+        "name": "is_active",
+        "type": "boolean",
+        "required": true,
+        "default": "true",
+        "keys": "",
+        "description": "Current access flag; removal is not row deletion.",
+        "ref": null
+      },
+      {
+        "name": "first_joined_at",
+        "type": "timestamptz",
+        "required": true,
+        "default": "now()",
+        "keys": "",
+        "description": "Never reset on rejoin.",
+        "ref": null
+      },
+      {
+        "name": "last_joined_at",
+        "type": "timestamptz",
+        "required": true,
+        "default": "now()",
+        "keys": "",
+        "description": "Updated on rejoin.",
+        "ref": null
+      },
+      {
+        "name": "departed_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": "NULL",
+        "keys": "",
+        "description": "Non-null while inactive; departure details remain in membership_events.",
+        "ref": null
+      }
+    ],
+    "rules": [
+      "UNIQUE (group_id, profile_id) prevents duplicate memberships.",
+      "UNIQUE (group_id, id) supports same-group composite foreign keys from financial tables.",
+      "CHECK active implies departed_at is NULL; inactive implies it is non-null.",
+      "Leaving or removal requires every direct balance involving this member to be zero.",
+      "Never physically delete memberships; departure removes group access."
+    ],
+    "indexes": [
+      "UNIQUE (group_id, profile_id).",
+      "UNIQUE (group_id, id).",
+      "Partial index (profile_id, group_id) WHERE is_active for joined-group lists."
+    ]
+  },
+  {
+    "id": "group_invitations",
+    "position": [
+      536,
+      207
+    ],
+    "purpose": "Reusable bearer invitation with expiry, creator attribution, hashed secret, and revocation state.",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default": "gen_random_uuid()",
+        "keys": "PK",
+        "description": "",
+        "ref": null
+      },
+      {
+        "name": "group_id",
+        "type": "uuid",
+        "required": true,
+        "default": "—",
+        "keys": "FK",
+        "description": "Invitation target.",
+        "ref": [
+          "groups",
+          "id"
+        ]
+      },
+      {
+        "name": "token_hash",
+        "type": "bytea",
+        "required": true,
+        "default": "SHA-256 of random token",
+        "keys": "UQ",
+        "description": "Store only the digest of a cryptographically random high-entropy token.",
+        "ref": null
+      },
+      {
+        "name": "created_by",
+        "type": "uuid",
+        "required": true,
+        "default": "Current profile",
+        "keys": "FK",
+        "description": "Revoke this creator’s links on departure.",
+        "ref": [
+          "profiles",
+          "id"
+        ]
+      },
+      {
+        "name": "created_at",
+        "type": "timestamptz",
+        "required": true,
+        "default": "now()",
+        "keys": "",
+        "description": "",
+        "ref": null
+      },
+      {
+        "name": "expires_at",
+        "type": "timestamptz",
+        "required": true,
+        "default": "created_at + 7 days",
+        "keys": "",
+        "description": "",
+        "ref": null
+      },
+      {
+        "name": "revoked_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": "NULL",
+        "keys": "",
+        "description": "",
+        "ref": null
+      },
+      {
+        "name": "revoked_by",
+        "type": "uuid",
+        "required": false,
+        "default": "NULL",
+        "keys": "FK",
+        "description": "Explicit or automatic revocation actor.",
+        "ref": [
+          "profiles",
+          "id"
+        ]
+      }
+    ],
+    "rules": [
+      "CHECK expires_at > created_at; creation service fixes duration at seven days.",
+      "Reject expiry, revocation, inactive group, or unverified acceptance. Revalidate under the group lock.",
+      "Multiple links can coexist. Repeated acceptance while active returns existing membership.",
+      "Full token is returned once; a replacement link can be created if it is no longer available."
+    ],
+    "indexes": [
+      "UNIQUE (group_id, id) for same-group membership-event references.",
+      "UNIQUE (token_hash) for token lookup.",
+      "Partial index (group_id, created_by) WHERE revoked_at IS NULL for revocation."
+    ]
+  },
+  {
+    "id": "membership_events",
+    "position": [
+      36,
+      207
+    ],
+    "purpose": "Append-only join, leave, and removal history, including rejoining and the invitation accepted.",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default": "gen_random_uuid()",
+        "keys": "PK",
+        "description": "",
+        "ref": null
+      },
+      {
+        "name": "group_id",
+        "type": "uuid",
+        "required": true,
+        "default": "—",
+        "keys": "FK",
+        "description": "Enforces group scope.",
+        "ref": [
+          "groups",
+          "id"
+        ]
+      },
+      {
+        "name": "membership_id",
+        "type": "uuid",
+        "required": true,
+        "default": "—",
+        "keys": "FK",
+        "description": "Composite FK (group_id, membership_id).",
+        "ref": [
+          "group_memberships",
+          "id"
+        ]
+      },
+      {
+        "name": "event_type",
+        "type": "text",
+        "required": true,
+        "default": "—",
+        "keys": "",
+        "description": "CHECK in joined, left, removed. A later joined event records rejoining.",
+        "ref": null
+      },
+      {
+        "name": "actor_id",
+        "type": "uuid",
+        "required": true,
+        "default": "Current profile",
+        "keys": "FK",
+        "description": "The joining/leaving user or remover.",
+        "ref": [
+          "profiles",
+          "id"
+        ]
+      },
+      {
+        "name": "invitation_id",
+        "type": "uuid",
+        "required": false,
+        "default": "NULL",
+        "keys": "FK",
+        "description": "Null for creator’s initial join; otherwise the accepted invite on joining.",
+        "ref": [
+          "group_invitations",
+          "id"
+        ]
+      },
+      {
+        "name": "occurred_at",
+        "type": "timestamptz",
+        "required": true,
+        "default": "now()",
+        "keys": "",
+        "description": "",
+        "ref": null
+      }
+    ],
+    "rules": [
+      "Append-only; never edit or delete past events.",
+      "Membership state and event are written in the same transaction.",
+      "When invitation_id is present, validate that it belongs to the same group; proposed composite FK requires UNIQUE (group_id, id) on invitations."
+    ],
+    "indexes": [
+      "Index (membership_id, occurred_at, id).",
+      "UNIQUE (group_id, id) on invitations for same-group references."
+    ]
+  },
+  {
+    "id": "expenses",
+    "position": [
+      284,
+      377
+    ],
+    "purpose": "One shared expense, one payer, editable transaction date, split method, and versioned soft deletion.",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default": "gen_random_uuid()",
+        "keys": "PK",
+        "description": "",
+        "ref": null
+      },
+      {
+        "name": "group_id",
+        "type": "uuid",
+        "required": true,
+        "default": "—",
+        "keys": "FK",
+        "description": "Group and currency scope.",
+        "ref": [
+          "groups",
+          "id"
+        ]
+      },
+      {
+        "name": "payer_membership_id",
+        "type": "uuid",
+        "required": true,
+        "default": "—",
+        "keys": "FK",
+        "description": "Composite FK (group_id, payer_membership_id); payer need not be a participant.",
+        "ref": [
+          "group_memberships",
+          "id"
+        ]
+      },
+      {
+        "name": "name",
+        "type": "text",
+        "required": true,
+        "default": "—",
+        "keys": "",
+        "description": "Proposed trimmed length: 1–200 characters; icons derived from name.",
+        "ref": null
+      },
+      {
+        "name": "amount_minor",
+        "type": "bigint",
+        "required": true,
+        "default": "—",
+        "keys": "",
+        "description": "Positive whole minor units; no floating point. CHECK <= 99999999999.",
+        "ref": null
+      },
+      {
+        "name": "transaction_date",
+        "type": "date",
+        "required": true,
+        "default": "—",
+        "keys": "",
+        "description": "Editable; no future date in group timezone.",
+        "ref": null
+      },
+      {
+        "name": "split_method",
+        "type": "text",
+        "required": true,
+        "default": "—",
+        "keys": "",
+        "description": "CHECK in equal, exact, percentage.",
+        "ref": null
+      },
+      {
+        "name": "version",
+        "type": "integer",
+        "required": true,
+        "default": "1",
+        "keys": "",
+        "description": "CHECK > 0; increment for every correction or deletion.",
+        "ref": null
+      },
+      {
+        "name": "created_by",
+        "type": "uuid",
+        "required": true,
+        "default": "Current profile",
+        "keys": "FK",
+        "description": "Creation actor.",
+        "ref": [
+          "profiles",
+          "id"
+        ]
+      },
+      {
+        "name": "updated_by",
+        "type": "uuid",
+        "required": true,
+        "default": "Current profile",
+        "keys": "FK",
+        "description": "Latest correction actor.",
+        "ref": [
+          "profiles",
+          "id"
+        ]
+      },
+      {
+        "name": "created_at",
+        "type": "timestamptz",
+        "required": true,
+        "default": "now()",
+        "keys": "",
+        "description": "",
+        "ref": null
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamptz",
+        "required": true,
+        "default": "now(); update on change",
+        "keys": "",
+        "description": "",
+        "ref": null
+      },
+      {
+        "name": "deleted_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": "NULL",
+        "keys": "",
+        "description": "Soft-deleted entries are excluded from balances and normal lists.",
+        "ref": null
+      }
+    ],
+    "rules": [
+      "UNIQUE (group_id, id) enables same-group child references.",
+      "Validate active payer/participants for new entries. Departed-member edit policy is still under review.",
+      "Sum of current shares must equal amount_minor. Percentages must sum to 10000 basis points for percentage splits.",
+      "Proposed: deferred database constraint triggers validate cross-row share totals and split inputs at commit.",
+      "Entry, shares, history, version increment, and permanent currency lock change atomically.",
+      "CHECK date against today is service validation, not a time-dependent table CHECK."
+    ],
+    "indexes": [
+      "UNIQUE (group_id, id).",
+      "Partial (group_id, transaction_date DESC, created_at DESC, id DESC) WHERE deleted_at IS NULL.",
+      "Index (group_id, payer_membership_id)."
+    ]
+  },
+  {
+    "id": "expense_shares",
+    "position": [
+      536,
+      377
+    ],
+    "purpose": "Final allocated amount for each participant, plus original percentage input where applicable.",
+    "columns": [
+      {
+        "name": "expense_id",
+        "type": "uuid",
+        "required": true,
+        "default": "—",
+        "keys": "PK FK",
+        "description": "Composite FK (group_id, expense_id).",
+        "ref": [
+          "expenses",
+          "id"
+        ]
+      },
+      {
+        "name": "membership_id",
+        "type": "uuid",
+        "required": true,
+        "default": "—",
+        "keys": "PK FK",
+        "description": "Composite FK (group_id, membership_id); one share per participant.",
+        "ref": [
+          "group_memberships",
+          "id"
+        ]
+      },
+      {
+        "name": "group_id",
+        "type": "uuid",
+        "required": true,
+        "default": "Parent expense group",
+        "keys": "FK",
+        "description": "Explicit same-group integrity.",
+        "ref": [
+          "groups",
+          "id"
+        ]
+      },
+      {
+        "name": "amount_minor",
+        "type": "bigint",
+        "required": true,
+        "default": "—",
+        "keys": "",
+        "description": "CHECK >= 0. Exact input is this amount; equal input is implicit. CHECK <= 99999999999.",
+        "ref": null
+      },
+      {
+        "name": "percentage_basis_points",
+        "type": "integer",
+        "required": false,
+        "default": "NULL",
+        "keys": "",
+        "description": "0–10000 for percentage splits, otherwise NULL. 3333 means 33.33%.",
+        "ref": null
+      }
+    ],
+    "rules": [
+      "PRIMARY KEY (expense_id, membership_id).",
+      "Payer’s own share is spending participation but creates no self-debt.",
+      "Use integer/rational split calculation; largest fractional remainder wins leftover units, stable membership ID breaks ties.",
+      "No independent share deletion or soft-delete flag: shares belong to an expense revision. Old versions live in immutable expense history.",
+      "Cross-row and parent split-method consistency checked by proposed deferred constraint triggers."
+    ],
+    "indexes": [
+      "PRIMARY KEY (expense_id, membership_id).",
+      "Index (group_id, membership_id, expense_id) for balance queries."
+    ]
+  },
+  {
+    "id": "repayments",
+    "position": [
+      36,
+      377
+    ],
+    "purpose": "A recorded external payment between two group members. It reduces direct debt and never counts as spending.",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default": "gen_random_uuid()",
+        "keys": "PK",
+        "description": "",
+        "ref": null
+      },
+      {
+        "name": "group_id",
+        "type": "uuid",
+        "required": true,
+        "default": "—",
+        "keys": "FK",
+        "description": "Repayment group.",
+        "ref": [
+          "groups",
+          "id"
+        ]
+      },
+      {
+        "name": "sender_membership_id",
+        "type": "uuid",
+        "required": true,
+        "default": "—",
+        "keys": "FK",
+        "description": "Composite FK (group_id, sender_membership_id).",
+        "ref": [
+          "group_memberships",
+          "id"
+        ]
+      },
+      {
+        "name": "recipient_membership_id",
+        "type": "uuid",
+        "required": true,
+        "default": "—",
+        "keys": "FK",
+        "description": "Composite FK (group_id, recipient_membership_id).",
+        "ref": [
+          "group_memberships",
+          "id"
+        ]
+      },
+      {
+        "name": "amount_minor",
+        "type": "bigint",
+        "required": true,
+        "default": "—",
+        "keys": "",
+        "description": "CHECK > 0. New repayment cannot exceed current direct debt. CHECK <= 99999999999.",
+        "ref": null
+      },
+      {
+        "name": "transaction_date",
+        "type": "date",
+        "required": true,
+        "default": "—",
+        "keys": "",
+        "description": "Editable and backdatable; no future date in group timezone.",
+        "ref": null
+      },
+      {
+        "name": "payment_method",
+        "type": "text",
+        "required": true,
+        "default": "cash",
+        "keys": "",
+        "description": "One method per repayment: cash or other. User requested payment_methods; singular column stores the selected value.",
+        "ref": null
+      },
+      {
+        "name": "payment_method_label",
+        "type": "text",
+        "required": false,
+        "default": "NULL",
+        "keys": "",
+        "description": "NULL for cash; required trimmed 1–100 characters for other, e.g. GPay, PhonePe, CRED.",
+        "ref": null
+      },
+      {
+        "name": "version",
+        "type": "integer",
+        "required": true,
+        "default": "1",
+        "keys": "",
+        "description": "CHECK > 0; optimistic concurrency token.",
+        "ref": null
+      },
+      {
+        "name": "created_by",
+        "type": "uuid",
+        "required": true,
+        "default": "Current profile",
+        "keys": "FK",
+        "description": "Any active member may record it.",
+        "ref": [
+          "profiles",
+          "id"
+        ]
+      },
+      {
+        "name": "updated_by",
+        "type": "uuid",
+        "required": true,
+        "default": "Current profile",
+        "keys": "FK",
+        "description": "Latest correction actor.",
+        "ref": [
+          "profiles",
+          "id"
+        ]
+      },
+      {
+        "name": "created_at",
+        "type": "timestamptz",
+        "required": true,
+        "default": "now()",
+        "keys": "",
+        "description": "",
+        "ref": null
+      },
+      {
+        "name": "updated_at",
+        "type": "timestamptz",
+        "required": true,
+        "default": "now(); update on change",
+        "keys": "",
+        "description": "",
+        "ref": null
+      },
+      {
+        "name": "deleted_at",
+        "type": "timestamptz",
+        "required": false,
+        "default": "NULL",
+        "keys": "",
+        "description": "",
+        "ref": null
+      }
+    ],
+    "rules": [
+      "CHECK sender_membership_id <> recipient_membership_id.",
+      "UNIQUE (group_id, id) for same-group history references.",
+      "For creation: both parties active; sender currently owes recipient; amount <= that debt. Check under group lock.",
+      "Do not retroactively invalidate a historical repayment when an expense correction reverses balances.",
+      "Repayment edit validation and party changes remain explicit open questions.",
+      "CHECK payment_method in cash, other. Cash requires NULL label; other requires trimmed nonblank label up to 100 characters.",
+      "Payment method and label are included in repayment revisions and canonical retry fingerprints."
+    ],
+    "indexes": [
+      "UNIQUE (group_id, id).",
+      "Partial (group_id, transaction_date DESC, created_at DESC, id DESC) WHERE deleted_at IS NULL.",
+      "Indexes (group_id, sender_membership_id) and (group_id, recipient_membership_id)."
+    ]
+  },
+  {
+    "id": "expense_revisions",
+    "position": [
+      536,
+      547
+    ],
+    "purpose": "Immutable full before/after snapshots of expense creation, correction, and soft deletion, including all shares.",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default": "gen_random_uuid()",
+        "keys": "PK",
+        "description": "",
+        "ref": null
+      },
+      {
+        "name": "group_id",
+        "type": "uuid",
+        "required": true,
+        "default": "—",
+        "keys": "FK",
+        "description": "Group scope.",
+        "ref": [
+          "groups",
+          "id"
+        ]
+      },
+      {
+        "name": "expense_id",
+        "type": "uuid",
+        "required": true,
+        "default": "—",
+        "keys": "FK UQ",
+        "description": "Composite FK (group_id, expense_id).",
+        "ref": [
+          "expenses",
+          "id"
+        ]
+      },
+      {
+        "name": "version",
+        "type": "integer",
+        "required": true,
+        "default": "Entry version",
+        "keys": "UQ",
+        "description": "UNIQUE (expense_id, version).",
+        "ref": null
+      },
+      {
+        "name": "action",
+        "type": "text",
+        "required": true,
+        "default": "—",
+        "keys": "",
+        "description": "CHECK in created, updated, deleted.",
+        "ref": null
+      },
+      {
+        "name": "actor_id",
+        "type": "uuid",
+        "required": true,
+        "default": "Current profile",
+        "keys": "FK",
+        "description": "Immutable correction attribution.",
+        "ref": [
+          "profiles",
+          "id"
+        ]
+      },
+      {
+        "name": "occurred_at",
+        "type": "timestamptz",
+        "required": true,
+        "default": "now()",
+        "keys": "",
+        "description": "",
+        "ref": null
+      },
+      {
+        "name": "before_values",
+        "type": "jsonb",
+        "required": false,
+        "default": "NULL on creation",
+        "keys": "",
+        "description": "Full prior entry and ordered shares; required for update/delete.",
+        "ref": null
+      },
+      {
+        "name": "after_values",
+        "type": "jsonb",
+        "required": true,
+        "default": "—",
+        "keys": "",
+        "description": "Full resulting entry and ordered shares, including deletion state.",
+        "ref": null
+      }
+    ],
+    "rules": [
+      "Append-only. Proposed role grants allow INSERT/SELECT but no UPDATE/DELETE, backed by mutation-rejecting triggers.",
+      "Creation has NULL before_values; update/delete has a complete object. Snapshots contain integer money and IDs.",
+      "Snapshot creation is atomic with expense/share mutation. Never store tokens or credentials.",
+      "Snapshots preserve values at revision time; current profile names may still change separately."
+    ],
+    "indexes": [
+      "UNIQUE (expense_id, version).",
+      "Index (group_id, occurred_at, id)."
+    ]
+  },
+  {
+    "id": "repayment_revisions",
+    "position": [
+      36,
+      547
+    ],
+    "purpose": "Immutable before/after snapshots of repayment creation, correction, and soft deletion.",
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "required": true,
+        "default": "gen_random_uuid()",
+        "keys": "PK",
+        "description": "",
+        "ref": null
+      },
+      {
+        "name": "group_id",
+        "type": "uuid",
+        "required": true,
+        "default": "—",
+        "keys": "FK",
+        "description": "Group scope.",
+        "ref": [
+          "groups",
+          "id"
+        ]
+      },
+      {
+        "name": "repayment_id",
+        "type": "uuid",
+        "required": true,
+        "default": "—",
+        "keys": "FK UQ",
+        "description": "Composite FK (group_id, repayment_id).",
+        "ref": [
+          "repayments",
+          "id"
+        ]
+      },
+      {
+        "name": "version",
+        "type": "integer",
+        "required": true,
+        "default": "Entry version",
+        "keys": "UQ",
+        "description": "UNIQUE (repayment_id, version).",
+        "ref": null
+      },
+      {
+        "name": "action",
+        "type": "text",
+        "required": true,
+        "default": "—",
+        "keys": "",
+        "description": "CHECK in created, updated, deleted.",
+        "ref": null
+      },
+      {
+        "name": "actor_id",
+        "type": "uuid",
+        "required": true,
+        "default": "Current profile",
+        "keys": "FK",
+        "description": "Immutable attribution.",
+        "ref": [
+          "profiles",
+          "id"
+        ]
+      },
+      {
+        "name": "occurred_at",
+        "type": "timestamptz",
+        "required": true,
+        "default": "now()",
+        "keys": "",
+        "description": "",
+        "ref": null
+      },
+      {
+        "name": "before_values",
+        "type": "jsonb",
+        "required": false,
+        "default": "NULL on creation",
+        "keys": "",
+        "description": "Full prior repayment; required for update/delete.",
+        "ref": null
+      },
+      {
+        "name": "after_values",
+        "type": "jsonb",
+        "required": true,
+        "default": "—",
+        "keys": "",
+        "description": "Full resulting repayment, including deletion state.",
+        "ref": null
+      }
+    ],
+    "rules": [
+      "Same append-only and atomic write policies as expense_revisions.",
+      "Dedicated history tables keep real foreign keys to their parent records.",
+      "Changing a transaction date is a normal audited correction, not a new repayment."
+    ],
+    "indexes": [
+      "UNIQUE (repayment_id, version).",
+      "Index (group_id, occurred_at, id)."
+    ]
+  },
+  {
+    "id": "idempotency_requests",
+    "position": [
+      284,
+      677
+    ],
+    "purpose": "Remembers one successful financial-create submission so a network retry returns the original result.",
+    "columns": [
+      {
+        "name": "actor_id",
+        "type": "uuid",
+        "required": true,
+        "default": "Current profile",
+        "keys": "PK FK",
+        "description": "The authenticated caller scopes each request key.",
+        "ref": [
+          "profiles",
+          "id"
+        ]
+      },
+      {
+        "name": "request_key",
+        "type": "uuid",
+        "required": true,
+        "default": "Client generated once",
+        "keys": "PK",
+        "description": "PRIMARY KEY (actor_id, request_key); reuse on retry.",
+        "ref": null
+      },
+      {
+        "name": "group_id",
+        "type": "uuid",
+        "required": true,
+        "default": "Target group",
+        "keys": "FK",
+        "description": "Recheck current authorization before replay.",
+        "ref": [
+          "groups",
+          "id"
+        ]
+      },
+      {
+        "name": "operation",
+        "type": "text",
+        "required": true,
+        "default": "—",
+        "keys": "",
+        "description": "CHECK in create_expense, create_repayment.",
+        "ref": null
+      },
+      {
+        "name": "request_hash",
+        "type": "bytea",
+        "required": true,
+        "default": "Canonical request digest",
+        "keys": "",
+        "description": "Includes operation, group, and normalized financial data.",
+        "ref": null
+      },
+      {
+        "name": "response_status",
+        "type": "smallint",
+        "required": true,
+        "default": "Successful response status",
+        "keys": "",
+        "description": "Recorded only with successful committed creation.",
+        "ref": null
+      },
+      {
+        "name": "response_body",
+        "type": "jsonb",
+        "required": true,
+        "default": "Creation response",
+        "keys": "",
+        "description": "Original response; no auth credentials.",
+        "ref": null
+      },
+      {
+        "name": "created_at",
+        "type": "timestamptz",
+        "required": true,
+        "default": "now()",
+        "keys": "",
+        "description": "",
+        "ref": null
+      }
+    ],
+    "rules": [
+      "Confirmed: same key + same operation/data returns original result; changed operation/data conflicts. Different key is a new command, never payload deduplication.",
+      "Proposed: reserve key, lock group, validate, create entry/history, and record response in one transaction; failed attempts roll back.",
+      "Concurrent duplicate submissions wait on uniqueness and replay the committed result.",
+      "Proposed retention: retain successful keys for MVP lifetime; do not purge and silently turn late retries into new payments.",
+      "Replay still requires current group access and verified authentication. A replay response describes the original operation, not the latest edited entry."
+    ],
+    "indexes": [
+      "PRIMARY KEY (actor_id, request_key).",
+      "Index (group_id) for administration; no cleanup TTL proposed."
+    ],
+    "status": "Retained for MVP · implementation authorized"
+  }
+];
+// END GENERATED TABLE DICTIONARY
+const decisions=[
+['Authentication & profile','Supabase handles Google and email/password authentication. FastAPI handles application data. One four-column profile is provisioned idempotently from the verified user ID.'],
+['Equal permissions','All active members can manage membership, expenses, and recorded repayments. Email/password users must verify before group actions.'],
+['One currency per group','Support INR, USD, CAD, GBP, and EUR. No conversion. Currency locks permanently after the first financial entry, even if later deleted.'],
+['Integer money','Use whole minor units. Money inputs allow two decimal places. Positive totals and repayments; rounded shares may be zero.'],
+['One payer, three split methods','Each expense has one payer and selected participants. The payer need not participate. Equal, exact, and percentage splits are supported.'],
+['Deterministic rounding','Percentages have two decimal places and total exactly 100%. Allocate leftover units by largest fractional remainder, with stable membership-ID tie-breaking. Preserve input percentages.'],
+['Direct pairwise balances','Offset mutual debt within each pair and group. Never reroute debt through a third member. Keep owed and receivable amounts separate in group summaries.'],
+['Repayment limits','Record partial or full external repayments up to the direct debt. No recipient confirmation and no money transfer. Repayments do not count as spending.'],
+['Corrections after repayment','Recalculate from corrected entries and recorded repayments. Active members can acquire a reverse balance when an expense is reduced after repayment.'],
+['Departure & rejoining','Leave or remove only when every direct balance involving the member is zero. Keep history and attribution. A valid invitation can reactivate the same membership and restore access to history.'],
+['Departed-member protection','Reject corrections leaving any departed member with a nonzero direct balance. A zero overall net balance is insufficient.'],
+['Final departure','The last active member can leave once all debts are zero. Inactivate the group and invalidate invitations. Group restoration is outside MVP.'],
+['Invitation rules','Reusable seven-day bearer links; anyone holding a valid link can explicitly join after authentication and required verification. All active members can revoke. Multiple links may coexist.'],
+['Invitation lifecycle','Store token hashes and return full links at creation. Revoke a creator’s invitations on departure. Share links only with people you trust.'],
+['Dates & ordering','Editable, backdatable calendar dates; reject future dates in the group’s fixed timezone. Sort newest transaction date, then creation instant and unique ID.'],
+['Concurrent corrections','Version expenses and repayments. Reject a save based on an obsolete version instead of overwriting someone else’s correction.'],
+['Retry safety','Reuse one request ID per intended submission. Same key/data replays; same key/different data conflicts. Different key is a new submission subject to ordinary validation.'],
+['Immutable history','Keep financial creation, edits, and deletion with actor/time and full before/after values including shares. Also retain membership joining, leaving, and removal events.'],
+['MVP boundaries','Groups and Account are functional. Personal tracking, Charts, Activity, budgets, account deletion, and money transfers are outside the agreed MVP.']
+];
+const flows=[
+{title:'Sign in → obtain a profile',status:'Flow agreed',steps:[['Authenticate with Supabase','Google or email/password. SDK stores and refreshes the session using protected mobile storage.'],['Call FastAPI with the access token','Verify signature, issuer, audience, and expiry. Derive identity from the verified subject.'],['Ensure the profile exists','Insert only if missing. A retry never overwrites the display name.'],['Authorize the requested action','Check required email verification and current group membership; identity alone does not grant group access.']]},
+{title:'Add an expense → update balances',status:'Transaction proposal',steps:[['Claim the request key','Use caller + request ID; replay the original success or reject conflicting reuse.'],['Lock the group and validate','Confirm active group, active actor/payer/participants, currency, date, and valid split inputs.'],['Allocate and persist','Insert expense and shares, complete creation snapshot, and set currency lock if needed.'],['Commit before success','Deferred total checks run; persist the retry response atomically. Balances derive from committed rows.']]},
+{title:'Accept invitation → join or rejoin',status:'Transaction proposal',steps:[['Resolve the hashed token','Authentication and required verification first. Never trust group IDs from the link alone.'],['Lock the group and recheck','Invitation must remain unexpired and unrevoked; group must be active.'],['Get the persistent membership','Return it if already active, otherwise insert or reactivate it.'],['Append a joined event and commit','Record actor, invitation, and instant. Do not duplicate memberships or events on repeat acceptance.']]},
+{title:'Correct an entry → preserve history',status:'Transaction proposal',steps:[['Lock group and check version','Recheck current actor access. Reject stale versions.'],['Apply the proposed correction','Recompute pairwise balances. Block any nonzero balance involving a departed member. Repayment edit policy remains open.'],['Append complete history','Save before/after values and shares in a dedicated immutable revision table. Increment version.'],['Commit the whole change','Entry, shares, history, and balance-affecting validation succeed or roll back together.']]},
+{title:'Settle up → record external payment',status:'Transaction proposal',steps:[['Claim request key and lock group','Two simultaneous full repayments must not both validate against the same debt.'],['Read current direct balance','Sender must owe recipient; positive amount cannot exceed debt.'],['Record repayment and creation history','Both parties must be active. Transaction date does not create a historical allocation to specific expenses.'],['Commit and return','Derived balances immediately reflect the payment. Spending totals exclude repayments.']]},
+{title:'Leave or remove → retain attribution',status:'Transaction proposal',steps:[['Lock group and recheck access','Every active member has equal membership-management permissions.'],['Check every pair involving the member','Each direct balance must be zero; a zero net total does not qualify.'],['Deactivate and retain the membership','Append left/removed event and revoke links issued by this member.'],['Handle final departure atomically','If no active members remain, inactivate group and revoke all remaining links. Keep financial records.']]}
+];
+const questions=[
+{id:'repayment-corrections',title:'Q21 · How should an existing repayment be corrected?',body:'A new repayment is capped at current debt, but a historical correction may follow an expense correction that already reversed the balance. Applying the creation cap to every old record would prevent fixing the record of what actually happened.',recommend:'Allow amount/date corrections and soft deletion of an existing repayment as a correction to the historical payment, without applying the new-payment debt cap again. Keep sender and recipient fixed; fix wrong parties by deleting and recording a new valid repayment. Always preserve departed-member zero balances.'},
+{id:'departed-participants',title:'Q22 · Can old expenses retain departed participants?',body:'A paid-off member leaves, and an active member needs to correct an old expense’s name or date. Requiring every historical participant to be active would unnecessarily block that correction.',recommend:'Allow already-referenced departed members to remain on an existing expense. Reject adding a departed member to another expense or selecting one as a new payer/participant. Any correction must leave every departed member’s direct balances at zero.'},
+{id:'date-meaning',title:'Q23 · What does backdating a repayment mean?',body:'A repayment can be recorded today with a past date. Should validity be checked against the group’s current corrected debts or a reconstructed balance on the selected date?',recommend:'Use the current corrected balance at save time. Dates determine display order, not historical replay or links to particular expenses. Keep creation time and history separately so entry order remains traceable.'}
+];
+const review=[
+'Proposed application schema: app, not exposed through Supabase’s Data API. A dedicated backend role gets only required grants; no direct client business-table access. Supabase Auth remains independently accessible.',
+'UUID identifiers; bigint minor units; timestamptz audit instants; date transaction dates; text values with CHECK constraints rather than database enum types for MVP.',
+'Composite foreign keys include group_id so shares, payers, repayment parties, membership events, and revisions cannot reference a different group. Reject physical deletion of referenced historical rows.',
+'Balances are derived from current non-deleted financial rows, without a mutable balance table. PostgreSQL numeric aggregation avoids overflow when adding bigint amounts; the API carries exact values.',
+'For A and B: debt A→B = A’s shares paid by B − B’s shares paid by A − repayments A→B + repayments B→A. Positive means A owes B; negative means B owes A. Ignore self-shares.',
+'Use one group-row lock per financial or membership mutation, recheck access under lock, and commit before returning success. Keep independent groups concurrent. Mutations use expected versions; new financial entries use retry keys.',
+'Proposed deferred constraint triggers validate expense/share totals and percentage input consistency at commit. Membership and balance-dependent rules run through backend transactions under the group lock.',
+'Separate expense_revisions and repayment_revisions preserve actual foreign keys. JSON snapshots contain complete before/after values and shares; append-only grants and triggers prevent normal application mutation.',
+'Retain successful caller-scoped idempotency keys for the MVP lifetime. Never infer duplicates from identical payment values. Replays require current authorization.',
+'Proposed input bounds: nonblank display/group names up to 100 characters; expense names up to 200; positive entry amounts up to 999,999,999.99 major units; validate integer range and use exact JSON transport. Final limits require review.',
+'UNION ALL expenses and repayments for the transaction feed; order by date DESC, created_at DESC, id DESC, then entry type for a complete cross-table tie-break. Use matching cursor pagination.',
+'Auth session duration, mobile storage library, Google redirect setup, manual account-linking UI, and deployment configuration are implementation follow-ups. Financial table design does not depend on picking them now.'
+];
+let selected='expenses',view='map',query='';
+const $=id=>document.getElementById(id);
+const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+let notes={};let storageAvailable=true;try{const saved=JSON.parse(localStorage.getItem('spendwise-db-review-v1')||'{}');if(saved&&typeof saved==='object'&&!Array.isArray(saved))notes=saved;}catch{storageAvailable=false;}
+function saveNote(key,value){notes[key]=value;try{localStorage.setItem('spendwise-db-review-v1',JSON.stringify(notes));$('storage-status').textContent='Review notes saved in this browser.';}catch{storageAvailable=false;$('storage-status').textContent='Notes are in memory only. Export before closing.';}}
+function noteMarkup(key,scope='question'){return `<label class="subtle" for="note-${esc(scope)}-${esc(key)}">Your review notes · saved locally</label><textarea class="note" id="note-${esc(scope)}-${esc(key)}" data-note="${esc(key)}" placeholder="Questions or changes to discuss…">${esc(notes[key]||'')}</textarea>`;}
+function related(id){const ids=new Set([id]);const table=tables.find(t=>t.id===id);table.columns.forEach(c=>{if(c.ref)ids.add(c.ref[0]);});tables.forEach(t=>t.columns.forEach(c=>{if(c.ref?.[0]===id)ids.add(t.id);}));return ids;}
+function renderList(){const matches=tables.filter(t=>[t.id,t.purpose,...t.columns.map(c=>c.name)].join(' ').toLowerCase().includes(query));$('table-list').innerHTML=matches.length?matches.map(t=>`<button type="button" class="table-item ${t.id===selected?'active':''}" data-table="${esc(t.id)}" aria-pressed="${t.id===selected}"><i class="dot ${t.managed?'managed':''}" aria-hidden="true"></i>${esc(t.id)}</button>`).join(''):'<span class="empty">No matching table or column.</span>';}
+function renderMap(){const connected=related(selected);$('nodes').innerHTML=tables.map(t=>`<button type="button" class="node ${t.id===selected?'selected':connected.has(t.id)?'':'dim'}" style="left:${t.position[0]}px;top:${t.position[1]}px" data-table="${esc(t.id)}" aria-pressed="${t.id===selected}" aria-label="Inspect ${esc(t.id)}"><span class="node-kind">${t.managed?'Supabase managed':t.id==='profiles'?'Shape agreed':'Proposed table'}</span><span class="node-name">${esc(t.id)}</span><span class="node-fields">${t.columns.length} ${t.managed?'referenced key':'columns'}<br>${esc(t.columns.slice(0,2).map(c=>c.name).join(' · '))}</span></button>`).join('');const edges=[];for(const t of tables){const seen=new Set();for(const col of t.columns){if(!col.ref||seen.has(col.ref[0]))continue;seen.add(col.ref[0]);const parent=tables.find(p=>p.id===col.ref[0]);if(!parent)continue;const [sx,sy]=t.position,[tx,ty]=parent.position;const x1=sx+93,y1=sy+52,x2=tx+93,y2=ty+52;const focus=t.id===selected||parent.id===selected;edges.push(`<path class="edge ${focus?'focus':''}" d="M${x1},${y1} C${x1},${(y1+y2)/2} ${x2},${(y1+y2)/2} ${x2},${y2}"/>`);}}$('edges').innerHTML=edges.sort((a,b)=>Number(a.includes('focus'))-Number(b.includes('focus'))).join('');}
+function fieldMarkup(col){return `<div class="field"><div class="field-top"><span class="field-name">${esc(col.name)}</span>${col.keys.split(' ').filter(Boolean).map(k=>`<span class="key">${esc(k)}</span>`).join('')}<span class="field-type">${esc(col.type)} · ${col.required?'required':'nullable'}</span></div><p>${esc(col.description||'—')}</p>${col.ref?`<button class="link-btn" data-table="${esc(col.ref[0])}">→ ${esc(col.ref.join('.'))}</button>`:''}</div>`;}
+function columnsTable(t){return `<div class="table-wrap"><table><thead><tr><th>Column</th><th>PostgreSQL type</th><th>Required</th><th>Default / source</th><th>Keys & meaning</th></tr></thead><tbody>${t.columns.map(col=>`<tr><td><code>${esc(col.name)}</code></td><td><code>${esc(col.type)}</code></td><td>${col.required?'Yes':'No'}</td><td>${esc(col.default)}</td><td>${col.keys?`<strong>${esc(col.keys)}</strong> · `:''}${esc(col.description)}${col.ref?`<br><button class="link-btn" data-table="${esc(col.ref[0])}">→ ${esc(col.ref.join('.'))}</button>`:''}</td></tr>`).join('')}</tbody></table></div>`;}
+function renderDetail(){const t=tables.find(t=>t.id===selected);const badge=t.managed?'managed':selected==='profiles'?'agreed':'';const status=t.status||'Implementation baseline';$('inspector').innerHTML=`<div class="inspect-head"><span class="badge ${badge}">${esc(status)}</span><h2>${esc(t.id)}</h2><p class="subtle">${esc(t.purpose)}</p><button class="link-btn" data-switch="tables">See defaults, constraints & indexes →</button></div><div class="inspect-body">${t.columns.map(fieldMarkup).join('')}<h3 style="margin-top:18px">Review notes</h3>${noteMarkup('table-'+t.id,'inspector')}</div>`;$('table-detail').innerHTML=`<div class="card"><div class="details-head"><div><h2><code>${esc(t.id)}</code></h2><p class="lead">${esc(t.purpose)}</p></div><span class="badge ${badge}">${esc(status)}</span></div>${!t.managed&&t.id!=='profiles'?'<div class="callout">Table definitions are the implementation baseline. Remaining correction policies are still under review; see implementation.md.</div>':''}${columnsTable(t)}<h3 style="margin-top:23px">Constraints & write rules</h3><ul class="rule-list">${t.rules.map(r=>`<li>${esc(r)}</li>`).join('')}</ul><h3>Indexes</h3><ul class="rule-list">${t.indexes.map(i=>`<li>${esc(i)}</li>`).join('')}</ul>${noteMarkup('table-'+t.id,'dictionary')}</div>`;}
+function selectTable(id){if(!tables.some(t=>t.id===id))return;selected=id;if(!['map','tables'].includes(view))switchView('tables');renderList();renderMap();renderDetail();}
+function switchView(next){if(!['map','tables','flows','decisions','questions'].includes(next))return;view=next;document.querySelectorAll('.tab').forEach(t=>{const active=t.dataset.view===view;t.setAttribute('aria-selected',active);t.tabIndex=active?0:-1;});document.querySelectorAll('.panel').forEach(p=>p.hidden=p.id!=='panel-'+view);try{history.replaceState(null,'','#'+view);}catch{}}
+function simulate(){const original=Number($('original').value),paid=Number($('paid').value),corrected=Number($('corrected').value);const valid=[$('original'),$('paid'),$('corrected')].every(e=>e.value!==''&&Number.isSafeInteger(Number(e.value)))&&original>0&&paid>=0&&paid<=original&&corrected>=0;const net=corrected-paid;const blocked=$('departed').checked&&net!==0;let result,explanation;if(!valid){result='Enter a valid original repayment scenario.';explanation='Use whole nonnegative rupees. Original debt must be positive; recorded repayment cannot exceed the original debt.';}else if(blocked){result='Correction blocked';explanation='Alice has departed. This correction would create a nonzero direct balance involving her. Historical records stay unchanged.';}else{result=net===0?'Alice and Bob are settled':net>0?`Alice owes Bob ₹${net.toLocaleString('en-IN')}`:`Bob owes Alice ₹${Math.abs(net).toLocaleString('en-IN')}`;explanation=`Corrected debt ₹${corrected.toLocaleString('en-IN')} − recorded repayment ₹${paid.toLocaleString('en-IN')} = ₹${net.toLocaleString('en-IN')}. ${net<0?'The repayment happened; reducing the expense creates a reverse balance.':'The repayment is retained; balances reflect the corrected expense.'}`;}$('scenario-result').textContent=result;$('scenario-explanation').textContent=explanation;$('scenario-output').classList.toggle('invalid',!valid||blocked);}
+function toast(message){$('toast').textContent=message;$('toast').hidden=false;setTimeout(()=>$('toast').hidden=true,3000);}
+document.addEventListener('click',event=>{const table=event.target.closest('[data-table]');if(table){selectTable(table.dataset.table);return;}const tab=event.target.closest('[data-view]');if(tab){switchView(tab.dataset.view);return;}const sw=event.target.closest('[data-switch]');if(sw)switchView(sw.dataset.switch);});
+document.addEventListener('input',event=>{if(event.target.matches('[data-note]')){const key=event.target.dataset.note;saveNote(key,event.target.value);document.querySelectorAll('[data-note]').forEach(el=>{if(el!==event.target&&el.dataset.note===key)el.value=event.target.value;});}});
+document.querySelector('.tabs').addEventListener('keydown',event=>{const tabs=[...document.querySelectorAll('.tab')];const index=tabs.indexOf(document.activeElement);if(index<0)return;let next;if(event.key==='ArrowRight')next=(index+1)%tabs.length;if(event.key==='ArrowLeft')next=(index-1+tabs.length)%tabs.length;if(event.key==='Home')next=0;if(event.key==='End')next=tabs.length-1;if(next!==undefined){event.preventDefault();switchView(tabs[next].dataset.view);tabs[next].focus();}});
+$('search').addEventListener('input',event=>{query=event.target.value.trim().toLowerCase();renderList();});
+$('print').addEventListener('click',()=>window.print());
+$('export').addEventListener('click',()=>{const data={document:'SpendWise database design review',exported_at:new Date().toISOString(),status:'Review notes only; not design approval',notes};const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='spendwise-database-review-notes.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Review notes exported.');});
+['original','paid','corrected','departed'].forEach(id=>$(id).addEventListener('input',simulate));
+$('app-count').textContent=tables.filter(t=>!t.managed).length;
+$('flows').innerHTML=flows.map(f=>`<article class="card"><span class="badge ${f.status==='Flow agreed'?'agreed':''}">${esc(f.status)}</span><h3 style="margin-top:12px">${esc(f.title)}</h3><ol class="steps">${f.steps.map(([title,body])=>`<li><strong>${esc(title)}</strong><small>${esc(body)}</small></li>`).join('')}</ol></article>`).join('');
+$('decisions').innerHTML=decisions.map(([title,body])=>`<article class="decision"><h3><i class="dot" aria-hidden="true"></i>${esc(title)}</h3><p>${esc(body)}</p></article>`).join('');
+$('questions').innerHTML=questions.map(q=>`<article class="question"><span class="badge">Open decision</span><h3 style="margin-top:10px">${esc(q.title)}</h3><p>${esc(q.body)}</p><p class="recommend"><strong>Recommendation:</strong> ${esc(q.recommend)}</p>${noteMarkup('question-'+q.id)}</article>`).join('');
+$('review-list').innerHTML=review.map(r=>`<li>${esc(r)}</li>`).join('');
+$('print-tables').innerHTML=tables.map(t=>`<section class="print-table"><h2>${esc(t.id)} · ${t.managed?'Supabase managed':t.id==='profiles'?'Shape agreed':'Proposed'}</h2><p>${esc(t.purpose)}</p>${columnsTable(t)}<h3>Constraints & indexes</h3><ul class="rule-list">${[...t.rules,...t.indexes].map(r=>`<li>${esc(r)}</li>`).join('')}</ul></section>`).join('');
+if(!storageAvailable)$('storage-status').textContent='Local storage unavailable. Export notes before closing.';
+renderList();renderMap();renderDetail();simulate();switchView(location.hash.slice(1)||'map');
+</script>
+</body>
+</html>

@@ -1,0 +1,3 @@
+# Use Supabase Auth
+
+SpendWise will use Supabase Auth for authentication, including Google sign-in and the MVP's email/password journeys, rather than implementing credential and session management in the FastAPI application. The client authenticates directly with Supabase and sends the resulting access token to FastAPI for SpendWise data operations. This delegates credential and session lifecycle management while keeping application authorization and financial transactions in the backend. Profile provisioning and the grants enforcing this boundary are detailed as proposals in the [database design draft](../database/design.md).
